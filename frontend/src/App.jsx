@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-import Login from "./pages/Login";
+import Login from "./pages/login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Editor from "./pages/Editor";
@@ -8,8 +8,8 @@ import Documents from "./pages/Documents";
 import Shared from "./pages/Shared";
 import Favorites from "./pages/Favorites";
 import Trash from "./pages/Trash";
-import Profile from "./pages/Profile";
-import Settings from "./pages/Settings";
+import Profile from "./pages/profile";
+import Settings from "./pages/settings";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
