@@ -56,6 +56,7 @@ function Header({
     if (!token) return;
 
     let cancelled = false;
+    let interval = null;
 
     const loadNotifications = async () => {
       try {
@@ -64,7 +65,9 @@ function Header({
           setNotifications(res.data);
         }
       } catch (err) {
-        if (!cancelled && err.response?.status !== 401) {
+        if (err.response?.status === 401) {
+          if (interval) clearInterval(interval);
+        } else if (!cancelled) {
           console.error("Failed to load notifications:", err);
         }
       }
@@ -77,7 +80,9 @@ function Header({
           setUnreadCount(res.data.count);
         }
       } catch (err) {
-        if (!cancelled && err.response?.status !== 401) {
+        if (err.response?.status === 401) {
+          if (interval) clearInterval(interval);
+        } else if (!cancelled) {
           console.error("Failed to load unread count:", err);
         }
       }
@@ -87,10 +92,10 @@ function Header({
     void loadNotifications();
     void loadUnreadCount();
 
-    const interval = setInterval(() => {
+    interval = setInterval(() => {
       const activeToken = localStorage.getItem("access");
       if (!activeToken) {
-        clearInterval(interval);
+        if (interval) clearInterval(interval);
         return;
       }
       void loadNotifications();
@@ -99,7 +104,7 @@ function Header({
 
     return () => {
       cancelled = true;
-      clearInterval(interval);
+      if (interval) clearInterval(interval);
     };
   }, []);
 

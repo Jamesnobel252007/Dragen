@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import logo from "../assets/wdragen.jpeg";
 
-// Adjust this to match your actual Django endpoint (e.g. simplejwt default is /api/token/)
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+const rawBase = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
+const API_BASE = rawBase.replace(/\/+$/, "");
 
 export default function Login() {
   const navigate = useNavigate();

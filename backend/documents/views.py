@@ -124,11 +124,11 @@ def _extract_page_images(page, doc_id, page_num):
 
 def _extract_page_tables(page):
     """Extract tabular data using PyMuPDF TableFinder if available."""
-    tables_html = []
+    table_items = []
     table_bboxes = []
 
     if not hasattr(page, "find_tables"):
-        return tables_html, table_bboxes
+        return table_items, table_bboxes
 
     try:
         tabs = page.find_tables()
@@ -156,11 +156,11 @@ def _extract_page_tables(page):
                     f'<tbody>{"".join(rows_html)}</tbody>'
                     '</table>'
                 )
-                tables_html.append(table_markup)
+                table_items.append({"html": table_markup, "bbox": bbox})
     except Exception as e:
         logger.warning("Table extraction error: %s", e)
 
-    return tables_html, table_bboxes
+    return table_items, table_bboxes
 
 
 def _is_inside_any_bbox(bbox, bboxes):
@@ -231,7 +231,7 @@ def extract_high_fidelity_pdf_content(doc):
             page_width = page.rect.width
 
             # 1. Check for Tables
-            tables_html, table_bboxes = _extract_page_tables(page)
+            table_items, table_bboxes = _extract_page_tables(page)
 
             # 2. Extract Text Blocks
             page_data = page.get_text("dict", sort=True)
@@ -270,13 +270,40 @@ def extract_high_fidelity_pdf_content(doc):
             ]
             typical_size = statistics.median(all_sizes) if all_sizes else 11.0
 
-            # 5. Sort Blocks in Natural Reading Order
-            text_blocks.sort(
-                key=lambda b: (
-                    round(b["bbox"][1] / 6) * 6 if b.get("bbox") else 0,
-                    b["bbox"][0] if b.get("bbox") else 0,
-                )
+            # 5. Detect Multi-Column Layout vs Single-Column
+            mid_x = page_width / 2.0
+            left_col = [b for b in text_blocks if b.get("bbox") and b["bbox"][2] <= mid_x + 15]
+            right_col = [b for b in text_blocks if b.get("bbox") and b["bbox"][0] >= mid_x - 15]
+            is_two_column = (
+                len(left_col) >= 2
+                and len(right_col) >= 2
+                and (len(left_col) + len(right_col)) >= len(text_blocks) * 0.75
             )
+
+            if is_two_column:
+                left_col.sort(key=lambda b: b["bbox"][1] if b.get("bbox") else 0)
+                right_col.sort(key=lambda b: b["bbox"][1] if b.get("bbox") else 0)
+                other_blocks = [
+                    b for b in text_blocks
+                    if b not in left_col and b not in right_col
+                ]
+                other_blocks.sort(key=lambda b: b["bbox"][1] if b.get("bbox") else 0)
+                ordered_blocks = [("text", b.get("bbox"), b) for b in other_blocks if b["bbox"][1] < 120]
+                ordered_blocks.extend([("text", b.get("bbox"), b) for b in left_col])
+                ordered_blocks.extend([("text", b.get("bbox"), b) for b in right_col])
+                ordered_blocks.extend([("text", b.get("bbox"), b) for b in other_blocks if b["bbox"][1] >= 120])
+            else:
+                # Interleave text blocks and tables in natural reading order
+                unified_items = [("text", b.get("bbox"), b) for b in text_blocks]
+                for tbl in table_items:
+                    unified_items.append(("table", tbl.get("bbox"), tbl["html"]))
+                unified_items.sort(
+                    key=lambda item: (
+                        round(item[1][1] / 6) * 6 if item[1] else 0,
+                        item[1][0] if item[1] else 0,
+                    )
+                )
+                ordered_blocks = unified_items
 
             page_elements = []
             bullet_items = []
@@ -291,11 +318,13 @@ def extract_high_fidelity_pdf_content(doc):
                     page_elements.append("<ol>" + "".join(numbered_items) + "</ol>")
                     numbered_items = []
 
-            # Add extracted tables at top of page if detected
-            for tbl in tables_html:
-                page_elements.append(tbl)
+            for item_type, bbox, item_data in ordered_blocks:
+                if item_type == "table":
+                    flush_lists()
+                    page_elements.append(item_data)
+                    continue
 
-            for block in text_blocks:
+                block = item_data
                 lines = block.get("lines", [])
                 block_plain = " ".join(
                     "".join(span.get("text", "") for span in line.get("spans", []))
@@ -316,9 +345,12 @@ def extract_high_fidelity_pdf_content(doc):
                     continue
 
                 largest_span_size = max((float(s.get("size", typical_size)) for s in spans), default=typical_size)
+                has_bold = any(
+                    bool(s.get("flags", 0) & 16) or any(w in (s.get("font") or "").lower() for w in ("bold", "black", "heavy", "semibold"))
+                    for s in spans
+                )
 
                 # Alignment
-                bbox = block.get("bbox")
                 alignment = "left"
                 if bbox and page_width:
                     x0, _, x1, _ = bbox
@@ -348,11 +380,11 @@ def extract_high_fidelity_pdf_content(doc):
                     continue
 
                 # Group lines into a clean paragraph or break-joined block
-                block_html = "<br>".join(rendered_lines)
+                block_html = " ".join(rendered_lines)
 
                 # Check for bullet list item (•, ●, ▪, ◦, ‣, -, *)
                 bullet_match = re.match(r"^\s*[•●▪◦‣\-\*]\s*(.+)", block_plain)
-                numbered_match = re.match(r"^\s*(\d+[\.\)])\s*(.+)", block_plain)
+                numbered_match = re.match(r"^\s*(\d+[\.\)]|[a-zA-Z][\.\)])\s*(.+)", block_plain)
 
                 if bullet_match:
                     if numbered_items:
@@ -371,7 +403,7 @@ def extract_high_fidelity_pdf_content(doc):
                         page_elements.append("<ul>" + "".join(bullet_items) + "</ul>")
                         bullet_items = []
                     cleaned_html = re.sub(
-                        r"(<[^>]*>)?\s*\d+[\.\)]\s*",
+                        r"(<[^>]*>)?\s*(\d+[\.\)]|[a-zA-Z][\.\)])\s*",
                         r"\1",
                         block_html,
                         count=1,
@@ -380,15 +412,16 @@ def extract_high_fidelity_pdf_content(doc):
                 else:
                     flush_lists()
 
-                    # Infer Headings
-                    is_short = len(block_plain) <= 180 and len(rendered_lines) <= 3
-                    if is_short and largest_span_size >= typical_size * 1.3:
-                        if largest_span_size >= typical_size * 1.8:
-                            tag = "h1"
-                        elif largest_span_size >= typical_size * 1.45:
-                            tag = "h2"
-                        else:
-                            tag = "h3"
+                    # Infer Headings using multi-signal analysis (size, weight, length)
+                    is_short = len(block_plain) <= 120 and len(rendered_lines) <= 2
+                    if is_short and (largest_span_size >= typical_size * 1.5 or (has_bold and largest_span_size >= typical_size * 1.3)):
+                        tag = "h1"
+                        page_elements.append(f"<{tag}{align_style}>{block_html}</{tag}>")
+                    elif is_short and (largest_span_size >= typical_size * 1.25 or (has_bold and largest_span_size >= typical_size * 1.12)):
+                        tag = "h2"
+                        page_elements.append(f"<{tag}{align_style}>{block_html}</{tag}>")
+                    elif is_short and (largest_span_size >= typical_size * 1.1 or (has_bold and len(block_plain) <= 80)):
+                        tag = "h3"
                         page_elements.append(f"<{tag}{align_style}>{block_html}</{tag}>")
                     else:
                         page_elements.append(f"<p{align_style}>{block_html}</p>")
@@ -400,6 +433,10 @@ def extract_high_fidelity_pdf_content(doc):
             page_elements.extend(image_elements)
 
             if page_elements:
+                if page_idx > 0:
+                    pages_html.append(
+                        f'<hr class="dragen-page-break" data-page="{page_num}" style="page-break-after: always; margin: 32px 0; border: none; border-top: 1px dashed #D4CEBF;" />'
+                    )
                 pages_html.append("\n".join(page_elements))
 
     final_content = "\n".join(pages_html)
@@ -766,6 +803,61 @@ class DocumentViewSet(viewsets.ModelViewSet):
             return Response(
                 {"error": "Unable to connect to the AI server."},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+    # ---------------- AI SUMMARIZE ----------------
+    @action(detail=True, methods=["post"], url_path="ai/summarize")
+    def ai_summarize(self, request, pk=None):
+        document = self.get_object()
+
+        if not document.content or not document.content.strip():
+            return Response(
+                {"error": "This document has no content to summarize."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            ai_server_url = getattr(settings, "AI_SERVER_URL", "http://127.0.0.1:5000")
+            ai_response = requests.post(
+                f"{ai_server_url}/api/docs/dragen/summarize",
+                json={"content": document.content},
+                timeout=120,
+            )
+
+            try:
+                ai_data = ai_response.json()
+            except ValueError:
+                ai_data = {"summary": ai_response.text}
+
+            if not ai_response.ok:
+                return Response(
+                    {"error": ai_data.get("message", "Document summarization failed.")},
+                    status=status.HTTP_502_BAD_GATEWAY,
+                )
+
+            return Response(
+                {
+                    "success": True,
+                    "document_id": document.id,
+                    "summary": ai_data.get("summary", ""),
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        except requests.RequestException as exc:
+            logger.warning("AI summarize fallback: %s", exc)
+            # Safe local extractive fallback
+            plain_text = re.sub(r"<[^>]+>", " ", document.content).strip()
+            sentences = [s.strip() for s in plain_text.split(". ") if len(s.strip()) > 35]
+            summary_preview = ". ".join(sentences[:5]) + ("." if sentences else "")
+            return Response(
+                {
+                    "success": True,
+                    "document_id": document.id,
+                    "summary": summary_preview or "Document content is too brief to generate a detailed summary.",
+                    "note": "Extractive summary generated locally.",
+                },
+                status=status.HTTP_200_OK,
             )
 
 

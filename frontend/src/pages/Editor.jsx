@@ -1142,6 +1142,7 @@ const [aiError, setAiError] = useState("");
                 socketRef={socketRef}
                 isRemote={isRemote}
                 onEditorReady={handleEditorReady}
+                onSaveShortcut={saveDocument}
               />
             </div>
           </div>
@@ -1153,6 +1154,7 @@ const [aiError, setAiError] = useState("");
             socketRef={socketRef}
             isRemote={isRemote}
             onEditorReady={handleEditorReady}
+            onSaveShortcut={saveDocument}
           />
         )}
       </div>

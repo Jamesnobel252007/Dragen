@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+const rawBase = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
+const API_BASE = rawBase.replace(/\/+$/, "");
 
 const COLLABORATORS = [
   { name: "Aditi", color: "#3D5AFE", top: "22%", left: "58%" },

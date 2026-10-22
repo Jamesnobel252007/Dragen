@@ -71,6 +71,9 @@ api.interceptors.response.use(
     const refreshToken = localStorage.getItem("refresh");
     if (!refreshToken) {
       localStorage.removeItem("access");
+      if (typeof window !== "undefined" && window.location.pathname !== "/" && window.location.pathname !== "/register") {
+        window.location.replace("/");
+      }
       return Promise.reject(error);
     }
 
@@ -109,6 +112,9 @@ api.interceptors.response.use(
       processQueue(refreshError, null);
       localStorage.removeItem("access");
       localStorage.removeItem("refresh");
+      if (typeof window !== "undefined" && window.location.pathname !== "/" && window.location.pathname !== "/register") {
+        window.location.replace("/");
+      }
       return Promise.reject(refreshError);
     } finally {
       isRefreshing = false;

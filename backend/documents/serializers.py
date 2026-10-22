@@ -16,6 +16,12 @@ class DocumentSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
+    def validate_title(self, value):
+        if not value or not value.strip():
+            return "Untitled Document"
+        return value.strip()[:255]
+
     def validate_file(self, value):
-        validate_pdf(value)
+        if value:
+            validate_pdf(value)
         return value

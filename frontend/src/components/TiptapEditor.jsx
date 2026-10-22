@@ -73,6 +73,56 @@ const CustomLink = Mark.create({
   },
 });
 
+const CustomImage = Node.create({
+  name: "customImage",
+  group: "block",
+  inline: false,
+  draggable: true,
+  addAttributes() {
+    return {
+      src: { default: null },
+      alt: { default: null },
+      title: { default: null },
+      style: {
+        default: "max-width: 100%; height: auto; border-radius: 8px; margin: 16px auto; display: block;",
+      },
+    };
+  },
+  parseHTML() {
+    return [{ tag: "img[src]" }];
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ["img", HTMLAttributes];
+  },
+});
+
+const Indent = Extension.create({
+  name: "indent",
+  addGlobalAttributes() {
+    return [
+      {
+        types: ["paragraph", "heading", "blockquote"],
+        attributes: {
+          indent: {
+            default: 0,
+            parseHTML: (element) => {
+              const padding = element.style.paddingLeft || "";
+              const match = padding.match(/(\d+)px/);
+              return match ? Math.round(parseInt(match[1], 10) / 24) : 0;
+            },
+            renderHTML: (attributes) => {
+              if (!attributes.indent || attributes.indent <= 0) return {};
+              return {
+                style: `padding-left: ${attributes.indent * 24}px;`,
+              };
+            },
+          },
+        },
+      },
+    ];
+  },
+});
+
 // Semantic Table Nodes for full table editing and PDF table rendering
 const Table = Node.create({
   name: "table",
@@ -187,6 +237,7 @@ function TiptapEditor({
   setStatus,
   socketRef,
   onEditorReady = () => {},
+  onSaveShortcut = null,
 }) {
   const [align, setAlign] = useState("left");
   const [currentFontSize, setCurrentFontSize] = useState("");
@@ -195,15 +246,21 @@ function TiptapEditor({
   const [showHighlightPalette, setShowHighlightPalette] = useState(false);
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
+  const [imageAlt, setImageAlt] = useState("");
+  const [showTableMenu, setShowTableMenu] = useState(false);
   const [showFindReplace, setShowFindReplace] = useState(false);
   const [findText, setFindText] = useState("");
   const [replaceText, setReplaceText] = useState("");
+  const [matchCount, setMatchCount] = useState(0);
   const [wordCount, setWordCount] = useState(0);
   const [charCount, setCharCount] = useState(0);
 
   const remoteUpdateRef = useRef(false);
   const colorPickerRef = useRef(null);
   const highlightPickerRef = useRef(null);
+  const tableMenuRef = useRef(null);
 
   const updateAlignment = useCallback((currentEditor) => {
     if (!currentEditor) return;
@@ -216,6 +273,17 @@ function TiptapEditor({
       currentNode.type.name === "listItem"
     ) {
       setAlign(currentNode.attrs.textAlign || "left");
+    }
+  }, []);
+
+  const updateActiveMarks = useCallback((currentEditor) => {
+    if (!currentEditor) return;
+    const attrs = currentEditor.getAttributes("textStyle");
+    if (attrs.fontSize) {
+      setCurrentFontSize(attrs.fontSize);
+    }
+    if (attrs.fontFamily) {
+      setCurrentFontFamily(attrs.fontFamily);
     }
   }, []);
 
@@ -237,6 +305,8 @@ function TiptapEditor({
       Subscript,
       Superscript,
       CustomLink,
+      CustomImage,
+      Indent,
       Table,
       TableRow,
       TableCell,
@@ -253,11 +323,13 @@ function TiptapEditor({
 
     onSelectionUpdate: ({ editor: ed }) => {
       updateAlignment(ed);
+      updateActiveMarks(ed);
       updateStats(ed);
     },
 
     onTransaction: ({ editor: ed }) => {
       updateAlignment(ed);
+      updateActiveMarks(ed);
       updateStats(ed);
     },
 
@@ -314,7 +386,7 @@ function TiptapEditor({
     }
   }, [content, editor, updateStats]);
 
-  // Close color palettes when clicking outside
+  // Close menus when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (colorPickerRef.current && !colorPickerRef.current.contains(e.target)) {
@@ -323,15 +395,68 @@ function TiptapEditor({
       if (highlightPickerRef.current && !highlightPickerRef.current.contains(e.target)) {
         setShowHighlightPalette(false);
       }
+      if (tableMenuRef.current && !tableMenuRef.current.contains(e.target)) {
+        setShowTableMenu(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Global editor shortcuts (Ctrl+S, Ctrl+F, Ctrl+P)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+      const mod = isMac ? e.metaKey : e.ctrlKey;
+
+      if (mod && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        if (typeof onSaveShortcut === "function") {
+          onSaveShortcut();
+        }
+      } else if (mod && e.key.toLowerCase() === "f") {
+        e.preventDefault();
+        setShowFindReplace((prev) => !prev);
+      } else if (mod && e.key.toLowerCase() === "p") {
+        e.preventDefault();
+        window.print();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onSaveShortcut]);
+
   const applyAlignment = (alignment) => {
     if (!editor) return;
     editor.chain().focus().setTextAlign(alignment).run();
     setAlign(alignment);
+  };
+
+  const handleIndent = () => {
+    if (!editor) return;
+    if (editor.isActive("listItem")) {
+      editor.chain().focus().sinkListItem("listItem").run();
+    } else {
+      const { $from } = editor.state.selection;
+      const currentIndent = $from.parent.attrs.indent || 0;
+      if (currentIndent < 8) {
+        editor.chain().focus().updateAttributes($from.parent.type.name, { indent: currentIndent + 1 }).run();
+      }
+    }
+  };
+
+  const handleOutdent = () => {
+    if (!editor) return;
+    if (editor.isActive("listItem")) {
+      editor.chain().focus().liftListItem("listItem").run();
+    } else {
+      const { $from } = editor.state.selection;
+      const currentIndent = $from.parent.attrs.indent || 0;
+      if (currentIndent > 0) {
+        editor.chain().focus().updateAttributes($from.parent.type.name, { indent: currentIndent - 1 }).run();
+      }
+    }
   };
 
   const setLink = () => {
@@ -355,32 +480,75 @@ function TiptapEditor({
     setLinkUrl("");
   };
 
-  const insertTable = () => {
+  const insertImage = () => {
+    if (!editor || !imageUrl.trim()) return;
+    const imgHtml = `<p style="text-align: center;"><img src="${imageUrl.trim()}" alt="${imageAlt.trim() || "Inserted Image"}" style="max-width: 100%; height: auto; border-radius: 8px; margin: 16px auto; display: block;" /></p>`;
+    editor.chain().focus().insertContent(imgHtml).run();
+    setShowImageModal(false);
+    setImageUrl("");
+    setImageAlt("");
+  };
+
+  const insertTable = (rows = 3, cols = 3) => {
     if (!editor) return;
+    const headerCols = Array.from({ length: cols }, (_, i) => `<th>Header ${i + 1}</th>`).join("");
+    const bodyRows = Array.from({ length: rows - 1 }, (_, r) => {
+      const rowCols = Array.from({ length: cols }, (_, c) => `<td>Cell ${r + 1}.${c + 1}</td>`).join("");
+      return `<tr>${rowCols}</tr>`;
+    }).join("");
+
     const tableHTML = `
       <table>
-        <thead>
-          <tr>
-            <th>Header 1</th>
-            <th>Header 2</th>
-            <th>Header 3</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Cell 1</td>
-            <td>Cell 2</td>
-            <td>Cell 3</td>
-          </tr>
-          <tr>
-            <td>Cell 4</td>
-            <td>Cell 5</td>
-            <td>Cell 6</td>
-          </tr>
-        </tbody>
+        <thead><tr>${headerCols}</tr></thead>
+        <tbody>${bodyRows}</tbody>
       </table>
+      <p></p>
     `;
     editor.chain().focus().insertContent(tableHTML).run();
+    setShowTableMenu(false);
+  };
+
+  const addTableRow = () => {
+    if (!editor) return;
+    const html = editor.getHTML();
+    if (!html.includes("<table")) {
+      insertTable(3, 3);
+      return;
+    }
+    const rowMatch = html.match(/<tr>(.*?)<\/tr>/i);
+    const colCount = rowMatch ? (rowMatch[1].match(/<t[hd]/gi) || []).length : 3;
+    const newCells = Array.from({ length: colCount }, () => "<td>New Cell</td>").join("");
+    const updated = html.replace(/<\/tbody>\s*<\/table>/i, `<tr>${newCells}</tr></tbody></table>`);
+    editor.commands.setContent(updated);
+    setContent(updated);
+    setShowTableMenu(false);
+  };
+
+  const addTableColumn = () => {
+    if (!editor) return;
+    const html = editor.getHTML();
+    if (!html.includes("<table")) {
+      insertTable(3, 3);
+      return;
+    }
+    let updated = html.replace(/<tr([^>]*)>(.*?)<\/tr>/gi, (match, trAttr, rowContent) => {
+      if (rowContent.includes("<th")) {
+        return `<tr${trAttr}>${rowContent}<th>New Header</th></tr>`;
+      }
+      return `<tr${trAttr}>${rowContent}<td>New Cell</td></tr>`;
+    });
+    editor.commands.setContent(updated);
+    setContent(updated);
+    setShowTableMenu(false);
+  };
+
+  const deleteCurrentTable = () => {
+    if (!editor) return;
+    const html = editor.getHTML();
+    const updated = html.replace(/<table[\s\S]*?<\/table>/i, "<p></p>");
+    editor.commands.setContent(updated);
+    setContent(updated);
+    setShowTableMenu(false);
   };
 
   const executeFindReplace = (replaceAll = false) => {
@@ -388,8 +556,12 @@ function TiptapEditor({
     const currentHTML = editor.getHTML();
     if (!currentHTML.includes(findText)) {
       alert(`Text "${findText}" not found in document.`);
+      setMatchCount(0);
       return;
     }
+
+    const matches = (currentHTML.match(new RegExp(findText, "gi")) || []).length;
+    setMatchCount(matches);
 
     let updatedHTML = "";
     if (replaceAll) {
@@ -775,11 +947,44 @@ function TiptapEditor({
           >
             1.
           </button>
+
+          {/* Outdent & Indent */}
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={handleOutdent}
+            className="w-8 h-8 flex items-center justify-center rounded-xl text-[#6B665E] hover:text-[#111110] hover:bg-[#F0EBE3] transition-colors"
+            title="Decrease Indent (Shift+Tab)"
+            aria-label="Decrease Indent"
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="21" y1="6" x2="11" y2="6" />
+              <line x1="21" y1="12" x2="11" y2="12" />
+              <line x1="21" y1="18" x2="11" y2="18" />
+              <polyline points="7 8 3 12 7 16" />
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={handleIndent}
+            className="w-8 h-8 flex items-center justify-center rounded-xl text-[#6B665E] hover:text-[#111110] hover:bg-[#F0EBE3] transition-colors"
+            title="Increase Indent (Tab)"
+            aria-label="Increase Indent"
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="21" y1="6" x2="11" y2="6" />
+              <line x1="21" y1="12" x2="11" y2="12" />
+              <line x1="21" y1="18" x2="11" y2="18" />
+              <polyline points="3 8 7 12 3 16" />
+            </svg>
+          </button>
         </div>
 
         <div className="h-4 w-[1px] bg-[#EAE6DF] mx-0.5" />
 
-        {/* 9. Insert Tools: Link, Table, Quote, HR */}
+        {/* 9. Insert Tools: Link, Image, Table, Quote, HR */}
         <div className="flex items-center gap-0.5">
           {/* Link Modal Toggle */}
           <button
@@ -797,19 +1002,80 @@ function TiptapEditor({
             </svg>
           </button>
 
-          {/* Table */}
+          {/* Insert Image */}
           <button
             type="button"
             onMouseDown={(e) => e.preventDefault()}
-            onClick={insertTable}
+            onClick={() => setShowImageModal(true)}
             className="w-8 h-8 flex items-center justify-center rounded-xl text-[#6B665E] hover:text-[#111110] hover:bg-[#F0EBE3] transition-colors"
-            title="Insert 3x3 Table"
+            title="Insert Image"
+            aria-label="Insert Image"
           >
             <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <path d="M3 9h18M3 15h18M9 3v18M15 3v18" />
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <polyline points="21 15 16 10 5 21" />
             </svg>
           </button>
+
+          {/* Table Menu */}
+          <div className="relative" ref={tableMenuRef}>
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => setShowTableMenu((prev) => !prev)}
+              className="w-8 h-8 flex items-center justify-center rounded-xl text-[#6B665E] hover:text-[#111110] hover:bg-[#F0EBE3] transition-colors"
+              title="Table Operations"
+              aria-label="Table Operations"
+            >
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <path d="M3 9h18M3 15h18M9 3v18M15 3v18" />
+              </svg>
+            </button>
+
+            {showTableMenu && (
+              <div className="absolute top-10 left-0 z-50 p-2 bg-[#FFFFFF] border border-[#E4DFD5] rounded-xl shadow-xl flex flex-col gap-1 w-48 text-xs font-medium">
+                <button
+                  type="button"
+                  onClick={() => insertTable(3, 3)}
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-[#F3EFE8] text-[#111110] transition"
+                >
+                  Insert 3x3 Table
+                </button>
+                <button
+                  type="button"
+                  onClick={() => insertTable(4, 4)}
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-[#F3EFE8] text-[#111110] transition"
+                >
+                  Insert 4x4 Table
+                </button>
+                <div className="h-[1px] bg-[#EAE6DF] my-1" />
+                <button
+                  type="button"
+                  onClick={addTableRow}
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-[#F3EFE8] text-[#111110] transition"
+                >
+                  + Add Row Below
+                </button>
+                <button
+                  type="button"
+                  onClick={addTableColumn}
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-[#F3EFE8] text-[#111110] transition"
+                >
+                  + Add Column Right
+                </button>
+                <div className="h-[1px] bg-[#EAE6DF] my-1" />
+                <button
+                  type="button"
+                  onClick={deleteCurrentTable}
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg hover:bg-[#FAECEB] text-[#A63529] transition"
+                >
+                  ✕ Delete Table
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Blockquote */}
           <button
@@ -838,22 +1104,40 @@ function TiptapEditor({
 
         <div className="h-4 w-[1px] bg-[#EAE6DF] mx-0.5" />
 
-        {/* 10. Find & Replace Toggle */}
-        <button
-          type="button"
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={() => setShowFindReplace((prev) => !prev)}
-          className={`h-8 px-2 flex items-center gap-1 rounded-xl text-xs font-medium transition-colors ${
-            showFindReplace ? "bg-[#111110] text-[#FAF8F5]" : "text-[#6B665E] hover:text-[#111110] hover:bg-[#F0EBE3]"
-          }`}
-          title="Find and Replace"
-        >
-          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-          <span>Find</span>
-        </button>
+        {/* 10. Print & Find Tools */}
+        <div className="flex items-center gap-0.5">
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => window.print()}
+            className="w-8 h-8 flex items-center justify-center rounded-xl text-[#6B665E] hover:text-[#111110] hover:bg-[#F0EBE3] transition-colors"
+            title="Print Document (Ctrl+P)"
+            aria-label="Print Document"
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="6 9 6 2 18 2 18 9" />
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+              <rect x="6" y="14" width="12" height="8" />
+            </svg>
+          </button>
+
+          {/* Find & Replace Toggle */}
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => setShowFindReplace((prev) => !prev)}
+            className={`h-8 px-2 flex items-center gap-1 rounded-xl text-xs font-medium transition-colors ${
+              showFindReplace ? "bg-[#111110] text-[#FAF8F5]" : "text-[#6B665E] hover:text-[#111110] hover:bg-[#F0EBE3]"
+            }`}
+            title="Find and Replace (Ctrl+F)"
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <span>Find</span>
+          </button>
+        </div>
       </div>
 
       {/* ----------------- FIND & REPLACE BAR ----------------- */}
@@ -873,6 +1157,11 @@ function TiptapEditor({
             onChange={(e) => setReplaceText(e.target.value)}
             className="flex-1 min-w-[140px] px-3 py-1.5 text-xs bg-[#FAF8F5] border border-[#E4DFD5] rounded-xl outline-none focus:border-[#111110]"
           />
+          {matchCount > 0 && (
+            <span className="text-[11px] font-mono text-[#10B981] px-1">
+              {matchCount} match{matchCount > 1 ? "es" : ""}
+            </span>
+          )}
           <button
             type="button"
             onClick={() => executeFindReplace(false)}
@@ -924,6 +1213,77 @@ function TiptapEditor({
           >
             Cancel
           </button>
+        </div>
+      )}
+
+      {/* ----------------- IMAGE INSERT MODAL ----------------- */}
+      {showImageModal && (
+        <div className="w-full max-w-[440px] mb-4 p-4 rounded-2xl bg-[#FFFFFF] border border-[#E4DFD5] shadow-xl flex flex-col gap-3">
+          <div className="flex items-center justify-between border-b border-[#EAE6DF] pb-2">
+            <span className="text-xs font-bold text-[#111110]">Insert Image</span>
+            <button
+              type="button"
+              onClick={() => setShowImageModal(false)}
+              className="text-xs text-[#8C867A] hover:text-[#111110]"
+            >
+              ✕
+            </button>
+          </div>
+          <div>
+            <label className="block text-[11px] font-semibold text-[#6B665E] mb-1">Image URL</label>
+            <input
+              type="url"
+              placeholder="https://example.com/image.png"
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              className="w-full px-3 py-1.5 text-xs bg-[#FAF8F5] border border-[#E4DFD5] rounded-xl outline-none focus:border-[#111110]"
+            />
+          </div>
+          <div>
+            <label className="block text-[11px] font-semibold text-[#6B665E] mb-1">Upload Local Image</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onload = () => {
+                    setImageUrl(reader.result);
+                  };
+                  reader.readAsDataURL(file);
+                }
+              }}
+              className="text-xs text-[#6B665E] file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border file:border-[#E4DFD5] file:text-xs file:font-medium file:bg-[#FAF8F5] file:text-[#111110]"
+            />
+          </div>
+          <div>
+            <label className="block text-[11px] font-semibold text-[#6B665E] mb-1">Alt Text / Caption (Optional)</label>
+            <input
+              type="text"
+              placeholder="Description of the image"
+              value={imageAlt}
+              onChange={(e) => setImageAlt(e.target.value)}
+              className="w-full px-3 py-1.5 text-xs bg-[#FAF8F5] border border-[#E4DFD5] rounded-xl outline-none focus:border-[#111110]"
+            />
+          </div>
+          <div className="flex items-center justify-end gap-2 pt-1 border-t border-[#EAE6DF]">
+            <button
+              type="button"
+              onClick={() => setShowImageModal(false)}
+              className="px-3 py-1.5 text-xs text-[#6B665E] hover:text-[#111110]"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={insertImage}
+              disabled={!imageUrl.trim()}
+              className="px-4 py-1.5 text-xs font-semibold bg-[#111110] text-[#FAF8F5] rounded-xl hover:bg-[#262422] disabled:opacity-40"
+            >
+              Insert Image
+            </button>
+          </div>
         </div>
       )}
 

@@ -273,4 +273,39 @@ input {
   font-size: smaller;
 }
 
+/* Page Breaks & Print Layout */
+.dragen-page-break {
+  page-break-after: always;
+  break-after: page;
+  margin: 36px 0;
+  border: none;
+  border-top: 2px dashed #E4DFD5;
+}
+
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  header, nav, aside, .sticky, button, .dragen-toolbar, #header, [role="toolbar"] {
+    display: none !important;
+  }
+  .dragen-document-pages {
+    gap: 0 !important;
+    width: 100% !important;
+  }
+  .dragen-page {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+    min-height: auto !important;
+  }
+  .dragen-page-break {
+    border: none !important;
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+}
+
 
