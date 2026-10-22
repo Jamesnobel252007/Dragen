@@ -70,3 +70,207 @@ input {
 .ProseMirror p {
   margin: 0 0 12px;
 }
+
+
+/* Dragen document canvas */
+.dragen-document-pages {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+/* A4-style paper */
+.dragen-page {
+  width: 100%;
+  max-width: 794px;
+  min-height: 1123px;
+  padding: 80px 76px;
+  background: #ffffff;
+  border: 1px solid #e8e3d8;
+  box-shadow: 0 4px 18px rgb(17 17 16 / 6%);
+}
+
+/* Editable content */
+.dragen-page .ProseMirror {
+  width: 100%;
+  min-height: 960px;
+  outline: none;
+  border: none;
+  box-shadow: none;
+  overflow-wrap: anywhere;
+  color: #202124;
+  line-height: 1.7;
+}
+
+.dragen-page .ProseMirror p {
+  margin: 0 0 12px;
+}
+
+.dragen-page .ProseMirror h1 {
+  font-size: 2em;
+  margin: 0 0 18px;
+}
+
+.dragen-page .ProseMirror h2 {
+  font-size: 1.5em;
+  margin: 0 0 14px;
+}
+
+.dragen-page .ProseMirror h3 {
+  font-size: 1.17em;
+  margin: 0 0 12px;
+}
+
+@media (max-width: 640px) {
+  .dragen-page {
+    min-height: 800px;
+    padding: 32px 24px;
+  }
+
+  .dragen-page .ProseMirror {
+    min-height: 720px;
+  }
+}
+
+@media print {
+  .dragen-document-pages {
+    display: block;
+  }
+
+  .dragen-page {
+    width: 210mm;
+    max-width: none;
+    min-height: 297mm;
+    margin: 0;
+    padding: 20mm;
+    border: none;
+    box-shadow: none;
+  }
+}
+
+
+/* Preserve imported heading hierarchy. */
+.dragen-page .ProseMirror h1,
+.dragen-page .ProseMirror h2,
+.dragen-page .ProseMirror h3 {
+  line-height: 1.25;
+  overflow-wrap: break-word;
+}
+
+/* Imported font sizes are rendered from inline span styles. */
+.dragen-page .ProseMirror span[style*="font-size"] {
+  line-height: inherit;
+}
+
+/* Preserve intentional alignment from imported HTML. */
+.dragen-page .ProseMirror p[style*="text-align"],
+.dragen-page .ProseMirror h1[style*="text-align"],
+.dragen-page .ProseMirror h2[style*="text-align"] {
+  width: 100%;
+}
+
+/* Make reconstructed lists look like normal editable lists. */
+.dragen-page .ProseMirror ul,
+.dragen-page .ProseMirror ol {
+  padding-left: 1.5rem;
+  margin: 0 0 12px;
+}
+
+.dragen-page .ProseMirror li {
+  margin-bottom: 4px;
+}
+
+.dragen-page .ProseMirror strong {
+  font-weight: 700;
+}
+
+.dragen-page .ProseMirror em {
+  font-style: italic;
+}
+
+/* Rich text tables */
+.dragen-page .ProseMirror table,
+.dragen-table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  margin: 16px 0;
+  overflow: hidden;
+}
+
+.dragen-page .ProseMirror table td,
+.dragen-page .ProseMirror table th,
+.dragen-table td,
+.dragen-table th {
+  min-width: 1em;
+  border: 1px solid #d1d5db;
+  padding: 8px 12px;
+  vertical-align: top;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.dragen-page .ProseMirror table th,
+.dragen-table th {
+  font-weight: 600;
+  text-align: left;
+  background-color: #f9fafb;
+}
+
+.dragen-page .ProseMirror table .selectedCell:after {
+  z-index: 2;
+  position: absolute;
+  content: "";
+  left: 0; right: 0; top: 0; bottom: 0;
+  background: rgba(200, 220, 255, 0.4);
+  pointer-events: none;
+}
+
+/* Blockquotes */
+.dragen-page .ProseMirror blockquote {
+  border-left: 3px solid #3b82f6;
+  margin: 16px 0;
+  padding-left: 16px;
+  color: #4b5563;
+  font-style: italic;
+}
+
+/* Horizontal Rules */
+.dragen-page .ProseMirror hr {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 24px 0;
+}
+
+/* Links */
+.dragen-page .ProseMirror a,
+.dragen-link {
+  color: #2563eb;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Extracted Images */
+.dragen-page .ProseMirror img,
+.dragen-img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin: 12px auto;
+  display: block;
+}
+
+/* Subscript and Superscript */
+.dragen-page .ProseMirror sub {
+  vertical-align: sub;
+  font-size: smaller;
+}
+
+.dragen-page .ProseMirror sup {
+  vertical-align: super;
+  font-size: smaller;
+}
+
+

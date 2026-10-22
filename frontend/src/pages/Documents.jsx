@@ -55,17 +55,38 @@ export default function Documents() {
   const [renamingId, setRenamingId] = useState(null);
   const [renameValue, setRenameValue] = useState("");
 
-  useEffect(() => {
-    setLoading(true);
 
-    fetchDocuments(mode)
-      .then(setDocs)
-      .catch((err) => {
-        console.error(err);
-        setError("Failed to load documents.");
-      })
-      .finally(() => setLoading(false));
-  }, [mode]);
+useEffect(() => {
+  let cancelled = false;
+
+  const loadDocuments = async () => {
+    try {
+      const documents = await fetchDocuments(mode);
+
+      if (!cancelled) {
+        setDocs(documents);
+        setError("");
+      }
+    } catch (err) {
+      console.error("Failed to load documents:", err);
+
+      if (!cancelled) {
+        setError("Failed to load documents. Please try again.");
+      }
+    } finally {
+      if (!cancelled) {
+        setLoading(false);
+      }
+    }
+  };
+
+  void loadDocuments();
+
+  return () => {
+    cancelled = true;
+  };
+}, [mode]);
+
 
   const filteredDocs = useMemo(() => {
     let result = docs.filter((d) =>
@@ -86,14 +107,7 @@ export default function Documents() {
     return result;
   }, [docs, mode, search, sortOrder]);
 
-  const updateDoc = async (id, changes) => {
-    try {
-      await api.patch(`documents/${id}/`, changes);
-      setDocs((prev) => prev.map((doc) => (doc.id === id ? { ...doc, ...changes } : doc)));
-    } catch (err) {
-      console.error(err);
-    }
-  };
+
 
   const deleteForever = async (id) => {
     try {
@@ -160,204 +174,257 @@ export default function Documents() {
   };
 
   const pageTitle =
-    mode === "favorites" ? "Favorites" : mode === "trash" ? "Trash" : "Documents";
+    mode === "favorites" ? "Starred Knowledge" : mode === "trash" ? "Trash Archive" : "All Documents";
 
   const pageSubtitle =
     mode === "favorites"
-      ? "Documents you've starred."
+      ? "Starred records and pinned reference documents."
       : mode === "trash"
-      ? "Items here are removed after 30 days."
-      : "All your documents in one place.";
+      ? "Deleted items will be permanently removed after 30 days."
+      : "Indexed documents and generative workspaces in your environment.";
 
   return (
-    <div className="flex min-h-screen bg-[#FAFAF7]">
-      {/* Fixed left navigation */}
+    <div className="flex min-h-screen bg-[#FAF8F5] text-[#111110] font-sans antialiased selection:bg-[#111110] selection:text-[#FAF8F5]">
+      {/* Sidebar Navigation */}
       <Sidebar />
 
-      {/* Right side: header on top, page content below */}
+      {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
-       <Header
-    search={search}
-    setSearch={setSearch}
-/>
+        <Header search={search} setSearch={setSearch} />
 
-        <main className="flex-1 p-8 max-w-6xl w-full">
-          <div className="flex items-start justify-between mb-6">
+        <main className="flex-1 p-6 sm:p-8 lg:p-10 max-w-7xl w-full mx-auto">
+          {/* Header & Primary Action */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 mb-8 border-b border-[#EAE6DF]">
             <div>
-              <h1 className="text-2xl font-semibold text-[#12141C] mb-1">{pageTitle}</h1>
-              <p className="text-sm text-[#6B7280]">{pageSubtitle}</p>
+              <div className="flex items-center gap-2 mb-1">
+                <h1 className="text-3xl font-semibold tracking-tight text-[#111110]">
+                  {pageTitle}
+                </h1>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-widest uppercase bg-[#EAE5DA] text-[#6B665E]">
+                  {filteredDocs.length} Docs
+                </span>
+              </div>
+              <p className="text-base text-[#787265]">{pageSubtitle}</p>
             </div>
+
             {mode === "all" && (
               <button
                 onClick={() => navigate("/editor/new")}
-                className="px-4 py-2.5 rounded-lg bg-[#3D5AFE] text-white text-sm font-medium hover:bg-[#2F46D6] active:scale-[0.98] transition"
+                className="inline-flex items-center justify-center gap-2.5 px-5 py-3 rounded-xl bg-[#111110] text-[#FAF8F5] text-base font-semibold hover:bg-[#262422] active:scale-[0.98] transition-all shadow-md shadow-[#111110]/10 shrink-0 group"
               >
-                + New document
+                <span className="text-base text-[#B58A3B] group-hover:rotate-90 transition-transform">✦</span>
+                <span>New Document</span>
               </button>
             )}
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
               {[0, 1, 2, 3].map((i) => (
-                <div key={i} className="h-32 bg-[#F1EFE8] rounded-xl animate-pulse" />
+                <div key={i} className="h-44 bg-[#EBE7DF] rounded-2xl" />
               ))}
             </div>
           ) : error ? (
-            <div className="bg-[#FEF3F2] border border-[#FDA29B] text-[#B42318] text-sm rounded-lg px-4 py-3 max-w-md">
-              {error}
+            <div className="p-6 rounded-2xl bg-[#FAECEB] border border-[#F2C0BC] text-[#A63529] max-w-lg flex items-center gap-3">
+              <svg className="w-5 h-5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
+              </svg>
+              <p className="text-sm font-medium">{error}</p>
             </div>
           ) : (
             <>
-              {/* Toolbar — this is the ONLY search box for documents.
-                  If Header.jsx also renders a search input, remove it there,
-                  or wire it to call setSearch from a shared context/store. */}
-              <div className="flex flex-wrap items-center gap-3 mb-6">
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search documents..."
-                  className="flex-1 min-w-[200px] px-3.5 py-2 rounded-lg border border-[#E6E4DD] bg-white text-sm text-[#12141C] placeholder:text-[#9CA3AF] outline-none focus:ring-2 focus:ring-[#3D5AFE]/25 focus:border-[#3D5AFE] transition"
-                />
+              {/* Controls Toolbar */}
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+                <div className="flex flex-wrap items-center gap-3 flex-1">
+                 
+                  {/* Sort Order Select */}
+                  <select
+                    value={sortOrder}
+                    onChange={(e) => setSortOrder(e.target.value)}
+                    className="px-3.5 py-2.5 rounded-xl border border-[#E4DFD5] bg-[#FFFFFF] text-sm font-medium text-[#111110] outline-none focus:border-[#111110] transition-all cursor-pointer"
+                  >
+                    <option value="newest">Sort: Newest first</option>
+                    <option value="oldest">Sort: Oldest first</option>
+                  </select>
+                </div>
 
-                <select
-                  value={sortOrder}
-                  onChange={(e) => setSortOrder(e.target.value)}
-                  className="px-3 py-2 rounded-lg border border-[#E6E4DD] bg-white text-sm text-[#12141C] outline-none focus:ring-2 focus:ring-[#3D5AFE]/25"
-                >
-                  <option value="newest">Newest first</option>
-                  <option value="oldest">Oldest first</option>
-                </select>
-
-                <div className="flex border border-[#E6E4DD] rounded-lg overflow-hidden">
+                {/* View Switcher */}
+                <div className="flex p-1 bg-[#F0ECE4] border border-[#E4DFD5] rounded-xl">
                   <button
                     onClick={() => setView("grid")}
-                    className={`px-3 py-2 text-sm ${
-                      view === "grid" ? "bg-[#EEF1FF] text-[#3D5AFE]" : "bg-white text-[#6B7280]"
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                      view === "grid"
+                        ? "bg-[#111110] text-[#FAF8F5] shadow-xs"
+                        : "text-[#6B665E] hover:text-[#111110]"
                     }`}
                   >
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="3" y="3" width="7" height="7" rx="1" />
+                      <rect x="14" y="3" width="7" height="7" rx="1" />
+                      <rect x="14" y="14" width="7" height="7" rx="1" />
+                      <rect x="3" y="14" width="7" height="7" rx="1" />
+                    </svg>
                     Grid
                   </button>
                   <button
                     onClick={() => setView("list")}
-                    className={`px-3 py-2 text-sm border-l border-[#E6E4DD] ${
-                      view === "list" ? "bg-[#EEF1FF] text-[#3D5AFE]" : "bg-white text-[#6B7280]"
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                      view === "list"
+                        ? "bg-[#111110] text-[#FAF8F5] shadow-xs"
+                        : "text-[#6B665E] hover:text-[#111110]"
                     }`}
                   >
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="8" y1="6" x2="21" y2="6" />
+                      <line x1="8" y1="12" x2="21" y2="12" />
+                      <line x1="8" y1="18" x2="21" y2="18" />
+                      <line x1="3" y1="6" x2="3.01" y2="6" />
+                      <line x1="3" y1="12" x2="3.01" y2="12" />
+                      <line x1="3" y1="18" x2="3.01" y2="18" />
+                    </svg>
                     List
                   </button>
                 </div>
               </div>
 
-              {/* Empty state */}
+              {/* Empty State */}
               {filteredDocs.length === 0 && (
-                <div className="border border-dashed border-[#E6E4DD] rounded-xl p-12 text-center">
-                  <p className="text-sm font-medium text-[#12141C] mb-1">
+                <div className="border border-dashed border-[#DCD6C9] bg-[#FFFFFF]/60 rounded-2xl p-14 text-center">
+                  <div className="w-12 h-12 rounded-2xl bg-[#F2EFE9] border border-[#E4DFD5] flex items-center justify-center mx-auto mb-4 text-[#8C867A]">
+                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                    </svg>
+                  </div>
+                  <p className="text-base font-semibold text-[#111110] mb-1">
                     {search
-                      ? "No documents match your search."
+                      ? "No documents match your search filter."
                       : mode === "trash"
-                      ? "Trash is empty."
+                      ? "Trash archive is empty."
                       : mode === "favorites"
-                      ? "No favorites yet."
-                      : "No documents yet."}
+                      ? "No starred documents yet."
+                      : "No documents created yet."}
+                  </p>
+                  <p className="text-sm text-[#787265] max-w-sm mx-auto mb-5">
+                    {mode === "all" && !search
+                      ? "Generate a document or bring in your notes to start querying with DRAGEN."
+                      : "Try tweaking your query or switching modes."}
                   </p>
                   {mode === "all" && !search && (
                     <button
                       onClick={() => navigate("/editor/new")}
-                      className="text-sm text-[#3D5AFE] font-medium hover:underline"
+                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#DCD6C9] bg-[#FAF8F5] text-sm font-semibold text-[#111110] hover:bg-[#F2EFE9] transition-all"
                     >
-                      Create your first document
+                      <span className="text-[#B58A3B]">✦</span>
+                      <span>Create your first document</span>
                     </button>
                   )}
                 </div>
               )}
 
-              {/* Grid view */}
+              {/* Grid View */}
               {filteredDocs.length > 0 && view === "grid" && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   {filteredDocs.map((doc) => (
                     <div
                       key={doc.id}
-                      className="relative bg-white border border-[#E6E4DD] rounded-xl p-4 hover:border-[#3D5AFE]/40 hover:shadow-sm transition"
+                      className="group relative bg-[#FFFFFF] border border-[#E8E3D8] hover:border-[#111110] rounded-2xl p-5 transition-all duration-150 shadow-xs hover:shadow-md flex flex-col justify-between h-44"
                     >
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="w-8 h-8 rounded-md bg-[#EEF1FF] flex items-center justify-center text-sm">
-                          📄
+                      <div className="flex items-start justify-between w-full">
+                        <div className="w-9 h-9 rounded-xl bg-[#FAF8F5] border border-[#EAE6DF] flex items-center justify-center text-[#6B665E] group-hover:text-[#111110] group-hover:border-[#111110]/30 transition-colors">
+                          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                          </svg>
                         </div>
-                        <div className="flex items-center gap-1">
-                          {doc.isFavorite && <span className="text-[#F5A524] text-sm">★</span>}
+
+                        <div className="flex items-center gap-1.5">
+                          {doc.isFavorite && (
+                            <span className="text-[#B58A3B]">
+                              <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                                <polygon points="10 2 12.5 7.5 18 8.3 14 12.2 15 17.5 10 14.8 5 17.5 6 12.2 2 8.3 7.5 7.5 10 2" />
+                              </svg>
+                            </span>
+                          )}
                           <button
                             onClick={() => setOpenMenuId(openMenuId === doc.id ? null : doc.id)}
-                            className="text-[#9CA3AF] hover:text-[#12141C] px-1"
+                            className="w-8 h-8 rounded-lg hover:bg-[#F2EFE9] flex items-center justify-center text-[#8C867A] hover:text-[#111110] transition-colors"
                             aria-label="Document actions"
                           >
-                            ⋯
+                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                              <circle cx="12" cy="12" r="2" />
+                              <circle cx="19" cy="12" r="2" />
+                              <circle cx="5" cy="12" r="2" />
+                            </svg>
                           </button>
                         </div>
                       </div>
 
-                      {renamingId === doc.id ? (
-                        <input
-                          autoFocus
-                          value={renameValue}
-                          onChange={(e) => setRenameValue(e.target.value)}
-                          onBlur={() => commitRename(doc)}
-                          onKeyDown={(e) => e.key === "Enter" && commitRename(doc)}
-                          className="w-full text-sm font-medium text-[#12141C] border border-[#3D5AFE] rounded px-1.5 py-0.5 mb-1 outline-none"
-                        />
-                      ) : (
-                        <button
-                          onClick={() => navigate(`/editor/${doc.id}`)}
-                          className="text-left w-full text-sm font-medium text-[#12141C] mb-1 truncate hover:text-[#3D5AFE]"
-                        >
-                          {doc.title}
-                        </button>
-                      )}
-                      <p className="text-xs text-[#9CA3AF]">{timeAgo(doc.updatedAt)}</p>
+                      <div>
+                        {renamingId === doc.id ? (
+                          <input
+                            autoFocus
+                            value={renameValue}
+                            onChange={(e) => setRenameValue(e.target.value)}
+                            onBlur={() => commitRename(doc)}
+                            onKeyDown={(e) => e.key === "Enter" && commitRename(doc)}
+                            className="w-full text-base font-semibold text-[#111110] border border-[#111110] rounded-lg px-2 py-1 mb-1 outline-none bg-white"
+                          />
+                        ) : (
+                          <button
+                            onClick={() => navigate(`/editor/${doc.id}`)}
+                            className="text-left w-full text-base font-semibold text-[#111110] mb-1.5 truncate group-hover:text-[#B58A3B] transition-colors"
+                          >
+                            {doc.title || "Untitled Document"}
+                          </button>
+                        )}
+                        <p className="text-xs font-mono text-[#8C867A]">{timeAgo(doc.updatedAt)}</p>
+                      </div>
 
+                      {/* Dropdown Menu */}
                       {openMenuId === doc.id && (
-                        <div className="absolute right-3 top-12 z-10 bg-white border border-[#E6E4DD] rounded-lg shadow-md py-1 w-40 text-sm">
+                        <div className="absolute right-4 top-14 z-20 bg-[#FAF8F5] border border-[#E4DFD5] rounded-xl shadow-xl shadow-[#111110]/10 p-1.5 w-44 text-sm animate-in fade-in zoom-in-95 duration-100">
                           {mode === "trash" ? (
                             <>
                               <button
                                 onClick={() => restoreDoc(doc)}
-                                className="w-full text-left px-3 py-2 hover:bg-[#F5F4F0] text-[#12141C]"
+                                className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#F0EBE3] text-[#111110] font-medium transition-colors"
                               >
-                                Restore
+                                ↺ Restore
                               </button>
                               <button
                                 onClick={() => deleteForever(doc.id)}
-                                className="w-full text-left px-3 py-2 hover:bg-[#FEF3F2] text-[#B42318]"
+                                className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#FAECEB] text-[#A63529] font-medium transition-colors"
                               >
-                                Delete forever
+                                ✕ Delete forever
                               </button>
                             </>
                           ) : (
                             <>
                               <button
                                 onClick={() => navigate(`/editor/${doc.id}`)}
-                                className="w-full text-left px-3 py-2 hover:bg-[#F5F4F0] text-[#12141C]"
+                                className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#F0EBE3] text-[#111110] font-medium transition-colors"
                               >
-                                Open
+                                ↗ Open
                               </button>
                               <button
                                 onClick={() => startRename(doc)}
-                                className="w-full text-left px-3 py-2 hover:bg-[#F5F4F0] text-[#12141C]"
+                                className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#F0EBE3] text-[#111110] font-medium transition-colors"
                               >
-                                Rename
+                                ✎ Rename
                               </button>
                               <button
                                 onClick={() => toggleFavorite(doc)}
-                                className="w-full text-left px-3 py-2 hover:bg-[#F5F4F0] text-[#12141C]"
+                                className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#F0EBE3] text-[#111110] font-medium transition-colors"
                               >
-                                {doc.isFavorite ? "Remove from favorites" : "Add to favorites"}
+                                {doc.isFavorite ? "★ Unstar" : "☆ Star"}
                               </button>
+                              <div className="my-1 border-t border-[#EAE6DF]" />
                               <button
                                 onClick={() => moveToTrash(doc)}
-                                className="w-full text-left px-3 py-2 hover:bg-[#FEF3F2] text-[#B42318]"
+                                className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#FAECEB] text-[#A63529] font-medium transition-colors"
                               >
-                                Move to trash
+                                ⌫ Move to trash
                               </button>
                             </>
                           )}
@@ -368,18 +435,24 @@ export default function Documents() {
                 </div>
               )}
 
-              {/* List view */}
+              {/* List View */}
               {filteredDocs.length > 0 && view === "list" && (
-                <div className="border border-[#E6E4DD] rounded-xl overflow-hidden">
+                <div className="border border-[#E8E3D8] rounded-2xl bg-[#FFFFFF] overflow-hidden shadow-xs">
                   {filteredDocs.map((doc, i) => (
                     <div
                       key={doc.id}
-                      className={`relative flex items-center justify-between px-4 py-3 bg-white hover:bg-[#FAFAF7] transition ${
-                        i !== 0 ? "border-t border-[#E6E4DD]" : ""
+                      className={`relative flex items-center justify-between px-5 py-3.5 hover:bg-[#FAF8F5] transition-colors ${
+                        i !== 0 ? "border-t border-[#EAE6DF]" : ""
                       }`}
                     >
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <span className="text-sm">📄</span>
+                      <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                        <div className="w-8 h-8 rounded-lg bg-[#FAF8F5] border border-[#EAE6DF] flex items-center justify-center text-[#6B665E] shrink-0">
+                          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                          </svg>
+                        </div>
+
                         {renamingId === doc.id ? (
                           <input
                             autoFocus
@@ -387,72 +460,84 @@ export default function Documents() {
                             onChange={(e) => setRenameValue(e.target.value)}
                             onBlur={() => commitRename(doc)}
                             onKeyDown={(e) => e.key === "Enter" && commitRename(doc)}
-                            className="text-sm font-medium text-[#12141C] border border-[#3D5AFE] rounded px-1.5 py-0.5 outline-none"
+                            className="text-base font-medium text-[#111110] border border-[#111110] rounded px-2 py-0.5 outline-none bg-white max-w-sm"
                           />
                         ) : (
                           <button
                             onClick={() => navigate(`/editor/${doc.id}`)}
-                            className="text-sm font-medium text-[#12141C] truncate hover:text-[#3D5AFE]"
+                            className="text-base font-semibold text-[#111110] truncate hover:text-[#B58A3B] transition-colors text-left"
                           >
-                            {doc.title}
+                            {doc.title || "Untitled Document"}
                           </button>
                         )}
-                        {doc.isFavorite && <span className="text-[#F5A524] text-xs">★</span>}
+                        {doc.isFavorite && (
+                          <span className="text-[#B58A3B] shrink-0">
+                            <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20">
+                              <polygon points="10 2 12.5 7.5 18 8.3 14 12.2 15 17.5 10 14.8 5 17.5 6 12.2 2 8.3 7.5 7.5 10 2" />
+                            </svg>
+                          </span>
+                        )}
                       </div>
 
-                      <div className="flex items-center gap-4 shrink-0">
-                        <span className="text-xs text-[#9CA3AF]">{timeAgo(doc.updatedAt)}</span>
+                      <div className="flex items-center gap-5 shrink-0">
+                        <span className="text-xs font-mono text-[#8C867A]">{timeAgo(doc.updatedAt)}</span>
                         <button
                           onClick={() => setOpenMenuId(openMenuId === doc.id ? null : doc.id)}
-                          className="text-[#9CA3AF] hover:text-[#12141C] px-1"
+                          className="w-8 h-8 rounded-lg hover:bg-[#F2EFE9] flex items-center justify-center text-[#8C867A] hover:text-[#111110] transition-colors"
                           aria-label="Document actions"
                         >
-                          ⋯
+                          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                            <circle cx="12" cy="12" r="2" />
+                            <circle cx="19" cy="12" r="2" />
+                            <circle cx="5" cy="12" r="2" />
+                          </svg>
                         </button>
                       </div>
 
+                      {/* Dropdown Menu */}
                       {openMenuId === doc.id && (
-                        <div className="absolute right-4 top-12 z-10 bg-white border border-[#E6E4DD] rounded-lg shadow-md py-1 w-40 text-sm">
+                        <div className="absolute right-5 top-12 z-20 bg-[#FAF8F5] border border-[#E4DFD5] rounded-xl shadow-xl shadow-[#111110]/10 p-1.5 w-44 text-sm animate-in fade-in zoom-in-95 duration-100">
                           {mode === "trash" ? (
                             <>
                               <button
                                 onClick={() => restoreDoc(doc)}
-                                className="w-full text-left px-3 py-2 hover:bg-[#F5F4F0] text-[#12141C]"
+                                className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#F0EBE3] text-[#111110] font-medium transition-colors"
                               >
-                                Restore
+                                ↺ Restore
                               </button>
                               <button
                                 onClick={() => deleteForever(doc.id)}
-                                className="w-full text-left px-3 py-2 hover:bg-[#FEF3F2] text-[#B42318]"
+                                className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#FAECEB] text-[#A63529] font-medium transition-colors"
                               >
-                                Delete forever
+                                ✕ Delete forever
                               </button>
                             </>
                           ) : (
                             <>
                               <button
                                 onClick={() => navigate(`/editor/${doc.id}`)}
-                                className="w-full text-left px-3 py-2 hover:bg-[#F5F4F0] text-[#12141C]"
+                                className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#F0EBE3] text-[#111110] font-medium transition-colors"
                               >
-                                Open
+                                ↗ Open
                               </button>
                               <button
                                 onClick={() => startRename(doc)}
-                                className="w-full text-left px-3 py-2 hover:bg-[#F5F4F0] text-[#12141C]"
+                                className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#F0EBE3] text-[#111110] font-medium transition-colors"
                               >
-                                Rename
+                                ✎ Rename
                               </button>
                               <button
                                 onClick={() => toggleFavorite(doc)}
-                                className="w-full text-left px-3 py-2 hover:bg-[#F5F4F0] text-[#12141C]"
+                                className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#F0EBE3] text-[#111110] font-medium transition-colors"
                               >
-                                {doc.isFavorite ? "Remove from favorites" : "Add to favorites"}
+                                {doc.isFavorite ? "★ Unstar" : "☆ Star"}
                               </button>
+                              <div className="my-1 border-t border-[#EAE6DF]" />
                               <button
                                 onClick={() => moveToTrash(doc)}
-                                className="w-full text-left px-3 py-2 hover:bg-[#FEF3F2] text-[#B42318]"
+                                className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#FAECEB] text-[#A63529] font-medium transition-colors"
                               >
-                                Move to trash
+                                ⌫ Move to trash
                               </button>
                             </>
                           )}

@@ -1,54 +1,68 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 import { FileText, Share2, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+const initialProfile = {
+    firstName: "User",
+    lastName: "",
+    email: "",
+    bio: "",
+};
+
 function Profile() {
     const navigate = useNavigate();
 
-    const [profile, setProfile] = useState({
-        firstName: "Sujay",
-        lastName: "Bobby",
-        email: "sujaybobby1@gmail.com",
-        bio: "MERN Intern at VDart. B.Tech IT student building scalable collaborative systems and modern web applications.",
+    const [profile] = useState(() => {
+        try {
+            const savedProfile = localStorage.getItem("vdocsProfile");
+
+            if (savedProfile) {
+                return {
+                    ...initialProfile,
+                    ...JSON.parse(savedProfile),
+                };
+            }
+        } catch (error) {
+            console.error("Failed to load profile:", error);
+        }
+
+        return initialProfile;
     });
 
-    useEffect(() => {
-        const savedProfile = JSON.parse(localStorage.getItem("vdocsProfile"));
-
-        if (savedProfile) {
-            setProfile(savedProfile);
-        }
-    }, []);
+    const firstName = profile.firstName || "User";
+    const lastName = profile.lastName || "";
+    const email = profile.email || "";
+    const bio = profile.bio || "";
 
     return (
         <div className="min-h-screen bg-[#F9FBFD] flex">
             <Sidebar />
 
             <div className="flex-1">
-                <Header search="" setSearch={() => { }} />
+                <Header search="" setSearch={() => {}} />
 
                 <main className="p-8 max-w-7xl mx-auto">
-                    {/* Profile Header */}
                     <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-200">
                         <div className="flex justify-between items-start">
                             <div className="flex gap-6">
                                 <div className="w-32 h-32 rounded-3xl bg-blue-600 text-white flex items-center justify-center text-5xl font-black border-4 border-blue-500">
-                                    {profile.firstName.charAt(0).toUpperCase()}
+                                    {firstName.charAt(0).toUpperCase()}
                                 </div>
 
                                 <div>
                                     <h1 className="text-5xl font-bold text-slate-900">
-                                        {profile.firstName} {profile.lastName}
+                                        {firstName} {lastName}
                                     </h1>
 
                                     <p className="text-slate-500 mt-2 text-lg">
-                                        {profile.email}
+                                        {email}
                                     </p>
 
                                     <p className="mt-5 text-slate-600 max-w-3xl leading-8 text-lg">
-                                        {profile.bio}
+                                        {bio}
                                     </p>
                                 </div>
                             </div>
@@ -62,7 +76,6 @@ function Profile() {
                         </div>
                     </div>
 
-                    {/* Stats */}
                     <div className="grid grid-cols-3 gap-6 mt-8">
                         <div className="bg-white p-8 rounded-3xl border">
                             <FileText className="text-blue-600 mb-4" size={28} />
@@ -83,7 +96,6 @@ function Profile() {
                         </div>
                     </div>
 
-                    {/* Activity */}
                     <div className="mt-8">
                         <h2 className="text-3xl font-bold mb-5">Recent Activity</h2>
 
@@ -100,7 +112,6 @@ function Profile() {
                         </div>
                     </div>
 
-                    {/* Premium Card */}
                     <div className="mt-8 bg-blue-600 text-white rounded-3xl p-10 flex justify-between items-center">
                         <div>
                             <h2 className="text-4xl font-bold">Workspace Premium</h2>

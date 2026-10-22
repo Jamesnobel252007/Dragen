@@ -47,7 +47,9 @@ export default function Register() {
     try {
       const res = await fetch(`${API_BASE}/register/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           username: form.username,
           email: form.email,
@@ -55,21 +57,19 @@ export default function Register() {
         }),
       });
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.detail || "Couldn't create your account.");
-      }
-
-      await res.json();
       const data = await res.json();
 
-      console.log(data);
-
       if (!res.ok) {
-        throw new Error(data.error || data.detail || "Registration failed");
+        throw new Error(
+          data.error ||
+          data.detail ||
+          "Couldn't create your account."
+        );
       }
-      alert("Registration successful!");
 
+      console.log("Registration:", data);
+
+      alert("Registration successful!");
       navigate("/");
     } catch (err) {
       setError(err.message || "Something went wrong. Try again.");

@@ -1,162 +1,168 @@
-// import {
-//     LayoutDashboard,
-//     FileText,
-//     Share2,
-//     Star,
-//     Trash2,
-//     Settings,
-// } from "lucide-react";
-// import { Link, useLocation } from "react-router-dom";
-
-// const Sidebar = () => {
-//     const location = useLocation();
-
-//     const navItems = [
-//         { name: "Dashboard", path: "/dashboard", icon: <LayoutDashboard size={18} /> },
-//         { name: "Documents", path: "/documents", icon: <FileText size={18} /> },
-//         { name: "Shared", path: "/shared", icon: <Share2 size={18} /> },
-//         { name: "Favorites", path: "/favorites", icon: <Star size={18} /> },
-//     ];
-
-//     const utilityItems = [
-//         { name: "Trash", path: "/trash", icon: <Trash2 size={18} /> },
-//         { name: "Settings", path: "/settings", icon: <Settings size={18} /> },
-//     ];
-
-//     return (
-//         <aside className="w-64 bg-white border-r border-slate-200 flex flex-col justify-between h-screen sticky top-0">
-//             <div className="p-5 flex flex-col flex-grow">
-//                 <div className="flex items-center gap-3 mb-8">
-//                     <div className="h-11 w-11 bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-xl flex items-center justify-center text-white font-black shadow-md text-xs">
-//                         VD
-//                     </div>
-
-//                     <div>
-//                         <div className="font-bold text-slate-900 text-base leading-none">
-//                             VDocs
-//                         </div>
-//                         <div className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mt-1">
-//                             Workspace
-//                         </div>
-//                     </div>
-//                 </div>
-
-//                 <nav className="flex flex-col gap-1">
-//                     {navItems.map((item) => {
-//                         const isActive = location.pathname === item.path;
-
-//                         return (
-//                             <Link
-//                                 key={item.name}
-//                                 to={item.path}
-//                                 className={`flex items-center gap-3 px-4 py-2.5 text-sm font-semibold rounded-xl transition ${isActive
-//                                         ? "bg-blue-50 text-blue-600"
-//                                         : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-//                                     }`}
-//                             >
-//                                 <span className={isActive ? "text-blue-600" : "text-slate-400"}>
-//                                     {item.icon}
-//                                 </span>
-//                                 <span>{item.name}</span>
-//                             </Link>
-//                         );
-//                     })}
-
-//                     <div className="h-px bg-slate-100 my-4" />
-
-//                     {utilityItems.map((item) => {
-//                         const isActive = location.pathname === item.path;
-
-//                         return (
-//                             <Link
-//                                 key={item.name}
-//                                 to={item.path}
-//                                 className={`flex items-center gap-3 px-4 py-2.5 text-sm font-semibold rounded-xl transition ${isActive
-//                                         ? "bg-blue-50 text-blue-600"
-//                                         : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-//                                     }`}
-//                             >
-//                                 <span className={isActive ? "text-blue-600" : "text-slate-400"}>
-//                                     {item.icon}
-//                                 </span>
-//                                 <span>{item.name}</span>
-//                             </Link>
-//                         );
-//                     })}
-//                 </nav>
-//             </div>
-//         </aside>
-//     );
-// };
-
-// export default Sidebar;
-
 import { useNavigate, useLocation } from "react-router-dom";
+import logo from "../assets/dragen.jpeg";
 
 function Sidebar({ isOpen, onClose }) {
   const navigate = useNavigate();
   const location = useLocation();
-const NAV_ITEMS = [
-  { label: "Dashboard", path: "/dashboard", icon: "🏠" },
-  { label: "Documents", path: "/documents", icon: "📄" },
-  { label: "Shared with you", path: "/shared", icon: "🔗" },
-  { label: "Favorites", path: "/favorites", icon: "⭐" },
-  { label: "Trash", path: "/trash", icon: "🗑️" },
-];
+
+  const NAV_ITEMS = [
+    {
+      label: "Dashboard",
+      path: "/dashboard",
+      icon: (
+        <svg className="w-5 h-5" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="6" height="6" rx="1.5" />
+          <rect x="11" y="3" width="6" height="6" rx="1.5" />
+          <rect x="3" y="11" width="6" height="6" rx="1.5" />
+          <rect x="11" y="11" width="6" height="6" rx="1.5" />
+        </svg>
+      ),
+    },
+    {
+      label: "Documents",
+      path: "/documents",
+      icon: (
+        <svg className="w-5 h-5" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 4.5A1.5 1.5 0 0 1 5.5 3h6.086a1.5 1.5 0 0 1 1.06.44l3.914 3.914a1.5 1.5 0 0 1 .44 1.06V15.5A1.5 1.5 0 0 1 15.5 17h-10A1.5 1.5 0 0 1 4 15.5v-11Z" />
+          <path d="M12 3v4.5a.5.5 0 0 0 .5.5H17" />
+          <path d="M7.5 11h5M7.5 14h3" />
+        </svg>
+      ),
+    },
+    {
+      label: "Shared with you",
+      path: "/shared",
+      icon: (
+        <svg className="w-5 h-5" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M14 6.5a2.5 2.5 0 1 0-5 0 2.5 2.5 0 0 0 5 0ZM6 11.5a2.5 2.5 0 1 0-5 0 2.5 2.5 0 0 0 5 0ZM14 16.5a2.5 2.5 0 1 0-5 0 2.5 2.5 0 0 0 5 0Z" />
+          <path d="m6.5 10.3 3-1.6M6.5 12.7l3 1.6" />
+        </svg>
+      ),
+    },
+    {
+      label: "Favorites",
+      path: "/favorites",
+      icon: (
+        <svg className="w-5 h-5" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+          <polygon points="10 2.5 12.5 7.5 18 8.3 14 12.2 15 17.5 10 14.8 5 17.5 6 12.2 2 8.3 7.5 7.5 10 2.5" />
+        </svg>
+      ),
+    },
+    {
+      label: "Trash",
+      path: "/trash",
+      icon: (
+        <svg className="w-5 h-5" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3.5 5.5h13M7.5 5.5V3.5a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v2M15 5.5l-.8 10.5a1.5 1.5 0 0 1-1.5 1.4H7.3a1.5 1.5 0 0 1-1.5-1.4L5 5.5" />
+        </svg>
+      ),
+    },
+  ];
+
   return (
     <>
       {/* Mobile overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/30 z-30 lg:hidden"
+          className="fixed inset-0 bg-[#111110]/30 backdrop-blur-xs z-30 lg:hidden transition-opacity"
           onClick={onClose}
         />
       )}
 
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-40 w-64 bg-white border-r border-[#E6E4DD] flex flex-col transition-transform duration-200 ${isOpen ? "translate-x-0" : "-translate-x-full"
-          } lg:translate-x-0`}
+        className={`fixed lg:static inset-y-0 left-0 z-40 w-72 bg-[#FAF8F5] border-r border-[#EAE6DF] flex flex-col justify-between transition-transform duration-200 ease-out font-sans ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        } lg:translate-x-0`}
       >
-        <div className="h-16 flex items-center gap-2 px-5 border-b border-[#E6E4DD]">
-          <div className="w-7 h-7 rounded-md bg-[#3D5AFE] flex items-center justify-center text-white text-sm font-semibold">
-            V
+        {/* TOP: Brand Header & Workspace Nav */}
+        <div>
+          <div className="h-16 flex items-center justify-between px-5 border-b border-[#EAE6DF]">
+            <div className="flex items-center gap-3">
+              <div className="">
+                <img src={logo} alt="Logo" className="w-10 h-10 rounded" />
+              </div>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-base font-semibold tracking-tight text-[#111110]">
+                  DRAGEN
+                </span>
+                
+              </div>
+            </div>
+            
+            {/* AI badge */}
+            <span className="text-[10px] font-bold text-[#B58A3B] bg-[#F2EFE9] border border-[#E4DFD5] px-2 py-0.5 rounded-md tracking-wider">
+              ✦ 2.5
+            </span>
           </div>
-          <span className="text-sm font-semibold text-[#12141C]">Docs</span>
+
+          {/* Navigation List */}
+          <nav className="p-3.5 space-y-1 overflow-y-auto">
+            <div className="px-3 pt-2.5 pb-1.5 text-[11px] font-semibold text-[#9E9789] uppercase tracking-wider">
+              Workspace
+            </div>
+
+            {NAV_ITEMS.map((item) => {
+              const active = location.pathname === item.path;
+              return (
+                <button
+                  key={item.path}
+                  onClick={() => {
+                    navigate(item.path);
+                    onClose?.();
+                  }}
+                  className={`w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-base font-medium transition-all group text-left ${
+                    active
+                      ? "bg-[#111110] text-[#FAF8F5] shadow-xs"
+                      : "text-[#4D4942] hover:text-[#111110] hover:bg-[#F2EFE9]"
+                  }`}
+                >
+                  <span
+                    className={`transition-colors ${
+                      active
+                        ? "text-[#FAF8F5]"
+                        : "text-[#847E72] group-hover:text-[#111110]"
+                    }`}
+                  >
+                    {item.icon}
+                  </span>
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </nav>
         </div>
 
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {NAV_ITEMS.map((item) => {
-            const active = location.pathname === item.path;
-            return (
-              <button
-                key={item.path}
-                onClick={() => {
-                  navigate(item.path);
-                  onClose?.();
-                }}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition ${active
-                  ? "bg-[#EEF1FF] text-[#3D5AFE]"
-                  : "text-[#4B5563] hover:bg-[#F1EFE8]"
-                  }`}
-              >
-                <span className="text-base">{item.icon}</span>
-                {item.label}
-              </button>
-            );
-          })}
-        </nav>
-
-        <div className="px-3 py-4 border-t border-[#E6E4DD]">
+        {/* BOTTOM: Settings Action */}
+        <div className="p-3.5 border-t border-[#EAE6DF] bg-[#F7F4EF]">
           <button
-            onClick={() => navigate("/settings")}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-[#4B5563] hover:bg-[#F1EFE8] transition"
+            onClick={() => {
+              navigate("/settings");
+              onClose?.();
+            }}
+            className={`w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-base font-medium transition-all group text-left ${
+              location.pathname === "/settings"
+                ? "bg-[#111110] text-[#FAF8F5] shadow-xs"
+                : "text-[#4D4942] hover:text-[#111110] hover:bg-[#EFECE5]"
+            }`}
           >
-            <span className="text-base">⚙️</span>
-            Settings
+            <span
+              className={`transition-colors ${
+                location.pathname === "/settings"
+                  ? "text-[#FAF8F5]"
+                  : "text-[#847E72] group-hover:text-[#111110]"
+              }`}
+            >
+              <svg className="w-5 h-5" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="10" cy="10" r="3" />
+                <path d="M16.2 12.3a1.5 1.5 0 0 0 .3 1.7l.1.1a1.7 1.7 0 1 1-2.4 2.4l-.1-.1a1.5 1.5 0 0 0-1.7-.3 1.5 1.5 0 0 0-1 1.4V18a1.7 1.7 0 1 1-3.4 0v-.5a1.5 1.5 0 0 0-1-1.4 1.5 1.5 0 0 0-1.7.3l-.1.1a1.7 1.7 0 1 1-2.4-2.4l.1-.1a1.5 1.5 0 0 0 .3-1.7 1.5 1.5 0 0 0-1.4-1H2a1.7 1.7 0 1 1 0-3.4h.5a1.5 1.5 0 0 0 1.4-1 1.5 1.5 0 0 0-.3-1.7l-.1-.1a1.7 1.7 0 1 1 2.4-2.4l.1.1a1.5 1.5 0 0 0 1.7.3 1.5 1.5 0 0 0 1-1.4V2a1.7 1.7 0 1 1 3.4 0v.5a1.5 1.5 0 0 0 1 1.4 1.5 1.5 0 0 0 1.7-.3l.1-.1a1.7 1.7 0 1 1 2.4 2.4l-.1.1a1.5 1.5 0 0 0-.3 1.7 1.5 1.5 0 0 0 1.4 1H18a1.7 1.7 0 1 1 0 3.4h-.5a1.5 1.5 0 0 0-1.4 1Z" />
+              </svg>
+            </span>
+            <span>Settings</span>
           </button>
         </div>
       </aside>
     </>
   );
 }
+
 export default Sidebar;

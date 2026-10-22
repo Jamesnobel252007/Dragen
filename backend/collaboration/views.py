@@ -1,3 +1,6 @@
+from pydoc import doc
+from urllib import request
+
 from django.shortcuts import render
 
 # Create your views here.
@@ -13,7 +16,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 
 from .serializers import CollaboratorSerializer
-
+from notification.models import Notification
 from documents.serializers import DocumentSerializer
 from rest_framework.permissions import IsAuthenticated
 
@@ -81,7 +84,13 @@ class ShareDocumentView(APIView):
             document=doc,
             role=role
         )
-
+        Notification.objects.create(
+    recipient=user,
+    sender=request.user,
+    notification_type="document_shared",
+    message=f"{request.user.username} shared '{doc.title}' with you",
+    document=doc
+)
         return Response({
             "message": "Document shared successfully"
         })
