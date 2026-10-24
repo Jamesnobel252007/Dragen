@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import JsonResponse
 from documents.views import serve_document_pdf
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -13,7 +14,15 @@ from documents.views import (
     shared_by_me,
 )
 
+
+def health_check(request):
+    """Lightweight unauthenticated health probe for Render deployments."""
+    return JsonResponse({"status": "healthy", "service": "dragen-backend"})
+
+
 urlpatterns = [
+    path("healthz", health_check, name="health_check"),
+    path("healthz/", health_check, name="health_check_slash"),
     path("admin/", admin.site.urls),
 
     path("api/", include("users.urls")),
