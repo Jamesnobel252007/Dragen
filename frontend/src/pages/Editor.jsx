@@ -703,11 +703,11 @@ const [aiError, setAiError] = useState("");
 
   const updateRole = async (userId, role) => {
     try {
-      await api.patch(`collaborators/${userId}/`, { role });
+      await api.patch(`collaborators/${userId}/`, { role, document_id: id });
       loadCollaborators();
     } catch (err) {
       console.error(err);
-      alert("Unable to update role");
+      alert(err.response?.data?.error || "Unable to update role");
     }
   };
 

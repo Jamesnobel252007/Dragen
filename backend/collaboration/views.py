@@ -147,33 +147,72 @@ class SharedByMeView(APIView):
 
         return Response(serializer.data)
 
+def _find_collaborator(request, pk):
+    """
+    Look up a Collaborator by:
+    1. document_id (from payload/query) + user_id or collaborator_id
+    2. direct Collaborator PK (id=pk)
+    3. user_id where the requesting user is the document owner
+    """
+    document_id = request.data.get("document_id") or request.query_params.get("document_id")
+
+    collaborator = None
+    if document_id:
+        collaborator = Collaborator.objects.filter(
+            document_id=document_id,
+            user_id=pk,
+        ).select_related("document", "user").first()
+        if not collaborator:
+            collaborator = Collaborator.objects.filter(
+                document_id=document_id,
+                id=pk,
+            ).select_related("document", "user").first()
+
+    if not collaborator:
+        collaborator = Collaborator.objects.filter(id=pk).select_related("document", "user").first()
+
+    if not collaborator:
+        owned_collabs = Collaborator.objects.filter(
+            user_id=pk,
+            document__owner=request.user,
+        ).select_related("document", "user")
+        if owned_collabs.exists():
+            collaborator = owned_collabs.first()
+
+    return collaborator
+
+
 class UpdateCollaboratorRoleView(APIView):
 
     permission_classes = [IsAuthenticated]
 
     def patch(self, request, pk):
-
-        try:
-            collaborator = Collaborator.objects.get(id=pk)
-        except Collaborator.DoesNotExist:
+        collaborator = _find_collaborator(request, pk)
+        if not collaborator:
             return Response(
                 {"error": "Collaborator not found"},
-                status=404
+                status=404,
             )
 
         if collaborator.document.owner != request.user:
             return Response(
-                {"error": "Not owner"},
-                status=403
+                {"error": "Only document owner can update collaborator roles"},
+                status=403,
+            )
+
+        if collaborator.user == collaborator.document.owner:
+            return Response(
+                {"error": "Owner role cannot be changed"},
+                status=400,
             )
 
         new_role = request.data.get("role")
 
         if new_role not in ["viewer", "editor"]:
             return Response(
-        {"error": "Invalid role"},
-        status=400
-    )
+                {"error": "Invalid role. Role must be 'viewer' or 'editor'"},
+                status=400,
+            )
 
         old_role = collaborator.role
 
@@ -181,31 +220,39 @@ class UpdateCollaboratorRoleView(APIView):
         collaborator.save()
 
         return Response({
-    "message": "Role updated successfully",
-    "user": collaborator.user.email,
-    "document": collaborator.document.title,
-    "previous_role": old_role,
-    "new_role": collaborator.role
-})
-    
+            "message": "Role updated successfully",
+            "user": collaborator.user.email,
+            "document": collaborator.document.title,
+            "previous_role": old_role,
+            "new_role": collaborator.role,
+        })
+
+    def delete(self, request, pk):
+        return RemoveCollaboratorView().delete(request, pk)
+
+
 class RemoveCollaboratorView(APIView):
 
     permission_classes = [IsAuthenticated]
 
     def delete(self, request, pk):
-
-        try:
-            collaborator = Collaborator.objects.get(id=pk)
-        except Collaborator.DoesNotExist:
+        collaborator = _find_collaborator(request, pk)
+        if not collaborator:
             return Response(
                 {"error": "Collaborator not found"},
-                status=404
+                status=404,
             )
 
         if collaborator.document.owner != request.user:
             return Response(
-                {"error": "Not owner"},
-                status=403
+                {"error": "Only document owner can remove collaborators"},
+                status=403,
+            )
+
+        if collaborator.user == collaborator.document.owner:
+            return Response(
+                {"error": "Owner cannot be removed"},
+                status=400,
             )
 
         user_email = collaborator.user.email
@@ -215,11 +262,11 @@ class RemoveCollaboratorView(APIView):
         collaborator.delete()
 
         return Response({
-    "message": "Access removed successfully",
-    "user": user_email,
-    "document": document_title,
-    "role_removed": role
-})
+            "message": "Access removed successfully",
+            "user": user_email,
+            "document": document_title,
+            "role_removed": role,
+        })
        
 from collaboration.models import Collaborator
 

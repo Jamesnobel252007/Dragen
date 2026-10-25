@@ -608,6 +608,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         data = [
             {
                 "id": document.owner.id,
+                "user_id": document.owner.id,
                 "username": document.owner.username,
                 "role": "owner",
             }
@@ -620,11 +621,60 @@ class DocumentViewSet(viewsets.ModelViewSet):
         for c in collaborators:
             data.append({
                 "id": c.user.id,
+                "user_id": c.user.id,
+                "collaborator_id": c.id,
                 "username": c.user.username,
                 "role": c.role,
             })
 
         return Response(data)
+
+    @action(
+        detail=True,
+        methods=["delete"],
+        url_path="remove-collaborator/(?P<user_id>[^/.]+)",
+    )
+    def remove_collaborator(self, request, pk=None, user_id=None):
+        document = self.get_object()
+
+        # Only document owner can remove collaborators
+        if document.owner != request.user:
+            return Response(
+                {"error": "Only document owner can remove collaborators."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # Prevent removing the document owner
+        if str(user_id) == str(document.owner.id):
+            return Response(
+                {"error": "Owner cannot be removed."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        collaborator = Collaborator.objects.filter(
+            document=document,
+            user_id=user_id,
+        ).first()
+
+        # Also support removing by collaborator row PK if provided
+        if not collaborator:
+            collaborator = Collaborator.objects.filter(
+                document=document,
+                id=user_id,
+            ).first()
+
+        if not collaborator:
+            return Response(
+                {"error": "Collaborator not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        collaborator.delete()
+
+        return Response(
+            {"message": "Collaborator removed successfully."},
+            status=status.HTTP_200_OK,
+        )
 
     # ---------------- AI INDEX ----------------
     @action(detail=True, methods=["post"], url_path="ai/index")

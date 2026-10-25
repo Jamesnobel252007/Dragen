@@ -21,10 +21,14 @@ path(
     "shared-by-me/",
     SharedByMeView.as_view()
 ),
-path(
-    "collaborators/<int:pk>/role/",
-    UpdateCollaboratorRoleView.as_view()
-),
+    path(
+        "collaborators/<int:pk>/",
+        UpdateCollaboratorRoleView.as_view(),
+    ),
+    path(
+        "collaborators/<int:pk>/role/",
+        UpdateCollaboratorRoleView.as_view(),
+    ),
 
 path(
     "collaborators/<int:pk>/remove/",
