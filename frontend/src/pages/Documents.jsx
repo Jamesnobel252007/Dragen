@@ -54,6 +54,7 @@ export default function Documents() {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [renamingId, setRenamingId] = useState(null);
   const [renameValue, setRenameValue] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
 
 useEffect(() => {
@@ -186,33 +187,37 @@ useEffect(() => {
   return (
     <div className="flex min-h-screen bg-[#FAF8F5] text-[#111110] font-sans antialiased selection:bg-[#111110] selection:text-[#FAF8F5]">
       {/* Sidebar Navigation */}
-      <Sidebar />
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        <Header search={search} setSearch={setSearch} />
+        <Header
+          onMenuClick={() => setSidebarOpen(true)}
+          search={search}
+          setSearch={setSearch}
+        />
 
-        <main className="flex-1 p-6 sm:p-8 lg:p-10 max-w-7xl w-full mx-auto">
+        <main className="flex-1 p-4 sm:p-8 lg:p-10 max-w-7xl w-full mx-auto">
           {/* Header & Primary Action */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 mb-8 border-b border-[#EAE6DF]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 mb-6 sm:mb-8 border-b border-[#EAE6DF]">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <h1 className="text-3xl font-semibold tracking-tight text-[#111110]">
+                <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[#111110]">
                   {pageTitle}
                 </h1>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-widest uppercase bg-[#EAE5DA] text-[#6B665E]">
                   {filteredDocs.length} Docs
                 </span>
               </div>
-              <p className="text-base text-[#787265]">{pageSubtitle}</p>
+              <p className="text-sm sm:text-base text-[#787265]">{pageSubtitle}</p>
             </div>
 
             {mode === "all" && (
               <button
                 onClick={() => navigate("/editor/new")}
-                className="inline-flex items-center justify-center gap-2.5 px-5 py-3 rounded-xl bg-[#111110] text-[#FAF8F5] text-base font-semibold hover:bg-[#262422] active:scale-[0.98] transition-all shadow-md shadow-[#111110]/10 shrink-0 group"
+                className="inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl bg-[#111110] text-[#FAF8F5] text-sm sm:text-base font-semibold hover:bg-[#262422] active:scale-[0.98] transition-all shadow-md shadow-[#111110]/10 w-full sm:w-auto shrink-0 group"
               >
-                <span className="text-base text-[#B58A3B] group-hover:rotate-90 transition-transform">✦</span>
+                <span className="text-sm sm:text-base text-[#B58A3B] group-hover:rotate-90 transition-transform">✦</span>
                 <span>New Document</span>
               </button>
             )}
@@ -324,11 +329,11 @@ useEffect(() => {
 
               {/* Grid View */}
               {filteredDocs.length > 0 && view === "grid" && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                   {filteredDocs.map((doc) => (
                     <div
                       key={doc.id}
-                      className="group relative bg-[#FFFFFF] border border-[#E8E3D8] hover:border-[#111110] rounded-2xl p-5 transition-all duration-150 shadow-xs hover:shadow-md flex flex-col justify-between h-44"
+                      className="group relative bg-[#FFFFFF] border border-[#E8E3D8] hover:border-[#111110] rounded-2xl p-4 sm:p-5 transition-all duration-150 shadow-xs hover:shadow-md flex flex-col justify-between min-h-[140px] sm:h-44"
                     >
                       <div className="flex items-start justify-between w-full">
                         <div className="w-9 h-9 rounded-xl bg-[#FAF8F5] border border-[#EAE6DF] flex items-center justify-center text-[#6B665E] group-hover:text-[#111110] group-hover:border-[#111110]/30 transition-colors">
@@ -441,11 +446,11 @@ useEffect(() => {
                   {filteredDocs.map((doc, i) => (
                     <div
                       key={doc.id}
-                      className={`relative flex items-center justify-between px-5 py-3.5 hover:bg-[#FAF8F5] transition-colors ${
+                      className={`relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-4 py-3.5 sm:px-5 sm:py-3.5 hover:bg-[#FAF8F5] transition-colors ${
                         i !== 0 ? "border-t border-[#EAE6DF]" : ""
                       }`}
                     >
-                      <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                      <div className="flex items-center gap-3 min-w-0 w-full sm:w-auto flex-1">
                         <div className="w-8 h-8 rounded-lg bg-[#FAF8F5] border border-[#EAE6DF] flex items-center justify-center text-[#6B665E] shrink-0">
                           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -460,7 +465,7 @@ useEffect(() => {
                             onChange={(e) => setRenameValue(e.target.value)}
                             onBlur={() => commitRename(doc)}
                             onKeyDown={(e) => e.key === "Enter" && commitRename(doc)}
-                            className="text-base font-medium text-[#111110] border border-[#111110] rounded px-2 py-0.5 outline-none bg-white max-w-sm"
+                            className="text-base font-medium text-[#111110] border border-[#111110] rounded px-2 py-0.5 outline-none bg-white max-w-sm w-full"
                           />
                         ) : (
                           <button
@@ -479,7 +484,7 @@ useEffect(() => {
                         )}
                       </div>
 
-                      <div className="flex items-center gap-5 shrink-0">
+                      <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto shrink-0 pt-2 sm:pt-0 border-t sm:border-0 border-[#EAE6DF]/60">
                         <span className="text-xs font-mono text-[#8C867A]">{timeAgo(doc.updatedAt)}</span>
                         <button
                           onClick={() => setOpenMenuId(openMenuId === doc.id ? null : doc.id)}

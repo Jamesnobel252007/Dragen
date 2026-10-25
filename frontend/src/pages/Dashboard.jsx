@@ -143,17 +143,17 @@ export default function Dashboard() {
           setSearch={setSearch}
         />
 
-        <main className="flex-1 p-6 sm:p-8 lg:p-10 max-w-7xl w-full mx-auto">
+        <main className="flex-1 p-4 sm:p-8 lg:p-10 max-w-7xl w-full mx-auto">
           {loading ? (
-            <div className="space-y-8 animate-pulse">
-              <div className="flex items-center justify-between">
+            <div className="space-y-6 sm:space-y-8 animate-pulse">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <div className="h-8 w-56 bg-[#EBE7DF] rounded-xl mb-2" />
-                  <div className="h-4 w-72 bg-[#EBE7DF] rounded-lg" />
+                  <div className="h-4 w-72 max-w-full bg-[#EBE7DF] rounded-lg" />
                 </div>
                 <div className="h-11 w-36 bg-[#EBE7DF] rounded-xl" />
               </div>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 {[0, 1, 2, 3].map((i) => (
                   <div key={i} className="h-28 bg-[#EBE7DF] rounded-2xl" />
                 ))}
@@ -161,7 +161,7 @@ export default function Dashboard() {
               <div className="h-48 bg-[#EBE7DF] rounded-2xl" />
             </div>
           ) : error ? (
-            <div className="p-6 rounded-2xl bg-[#FAECEB] border border-[#F2C0BC] text-[#A63529] max-w-lg flex items-center gap-3">
+            <div className="p-4 sm:p-6 rounded-2xl bg-[#FAECEB] border border-[#F2C0BC] text-[#A63529] max-w-lg flex items-center gap-3">
               <svg className="w-5 h-5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
               </svg>
@@ -169,14 +169,14 @@ export default function Dashboard() {
             </div>
           ) : (
             <DashboardContent
-  data={data}
-  navigate={navigate}
-  handleCreateDocument={handleCreateDocument}
-  handleUploadPDF={handleUploadPDF}
-  uploading={uploading}
-  uploadError={uploadError}
-  uploadSuccess={uploadSuccess}
-/>
+              data={data}
+              navigate={navigate}
+              handleCreateDocument={handleCreateDocument}
+              handleUploadPDF={handleUploadPDF}
+              uploading={uploading}
+              uploadError={uploadError}
+              uploadSuccess={uploadSuccess}
+            />
           )}
         </main>
       </div>
@@ -242,32 +242,32 @@ function DashboardContent({
   ];
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8 sm:space-y-10">
       {/* Overview Top bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#EAE6DF]">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <h1 className="text-3xl font-semibold tracking-tight text-[#111110]">
+            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[#111110]">
               Workspace Overview
             </h1>
             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-widest uppercase bg-[#EAE5DA] text-[#6B665E]">
               Active
             </span>
           </div>
-          <p className="text-base text-[#787265]">
+          <p className="text-sm sm:text-base text-[#787265]">
             Manage, organize, and synthesize your intelligent documents.
           </p>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto shrink-0">
           {/* Upload PDF */}
           <label
-            className={`inline-flex items-center justify-center gap-2.5 px-5 py-3 rounded-xl border border-[#E4DFD5] bg-[#FAF8F5] text-[#111110] text-base font-semibold transition-all shadow-sm ${uploading
+            className={`inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl border border-[#E4DFD5] bg-[#FAF8F5] text-[#111110] text-sm sm:text-base font-semibold transition-all shadow-sm ${uploading
               ? "opacity-60 cursor-not-allowed"
               : "hover:bg-[#F3EFE8] hover:border-[#D5CEC1] cursor-pointer active:scale-[0.98]"
               }`}
           >
-            <span className="text-lg text-[#B58A3B]">
+            <span className="text-base sm:text-lg text-[#B58A3B]">
               {uploading ? "..." : "↑"}
             </span>
 
@@ -287,31 +287,31 @@ function DashboardContent({
           {/* New Document */}
           <button
             onClick={handleCreateDocument}
-            className="inline-flex items-center justify-center gap-2.5 px-5 py-3 rounded-xl bg-[#111110] text-[#FAF8F5] text-base font-semibold hover:bg-[#262422] active:scale-[0.98] transition-all shadow-md shadow-[#111110]/10 shrink-0 group"
+            className="inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl bg-[#111110] text-[#FAF8F5] text-sm sm:text-base font-semibold hover:bg-[#262422] active:scale-[0.98] transition-all shadow-md shadow-[#111110]/10 shrink-0 group"
           >
-            <span className="text-base text-[#B58A3B] group-hover:rotate-90 transition-transform">
+            <span className="text-sm sm:text-base text-[#B58A3B] group-hover:rotate-90 transition-transform">
               ✦
             </span>
 
             <span>New Document</span>
           </button>
         </div>
-
-        {uploadError && (
-  <div className="mt-4 px-4 py-3 rounded-xl bg-[#A63529]/10 border border-[#A63529]/20 text-[#A63529] text-sm">
-    {uploadError}
-  </div>
-)}
-
-{uploadSuccess && (
-  <div className="mt-4 px-4 py-3 rounded-xl bg-[#B58A3B]/10 border border-[#B58A3B]/20 text-[#6B665E] text-sm">
-    {uploadSuccess}
-  </div>
-)}
       </div>
 
+      {uploadError && (
+        <div className="px-4 py-3 rounded-xl bg-[#A63529]/10 border border-[#A63529]/20 text-[#A63529] text-sm">
+          {uploadError}
+        </div>
+      )}
+
+      {uploadSuccess && (
+        <div className="px-4 py-3 rounded-xl bg-[#B58A3B]/10 border border-[#B58A3B]/20 text-[#6B665E] text-sm">
+          {uploadSuccess}
+        </div>
+      )}
+
       {/* Metric Cards Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {statCards.map((card) => (
           <div
             key={card.label}
@@ -374,12 +374,12 @@ function DashboardContent({
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {recentDocuments.map((doc) => (
               <button
                 key={doc.id}
                 onClick={() => navigate(`/editor/${doc.id}`)}
-                className="group text-left bg-[#FFFFFF] border border-[#E8E3D8] hover:border-[#111110] rounded-2xl p-5 transition-all duration-150 shadow-xs hover:shadow-md flex flex-col justify-between h-44 relative overflow-hidden"
+                className="group text-left bg-[#FFFFFF] border border-[#E8E3D8] hover:border-[#111110] rounded-2xl p-4 sm:p-5 transition-all duration-150 shadow-xs hover:shadow-md flex flex-col justify-between min-h-[140px] sm:h-44 relative overflow-hidden"
               >
                 {/* Top preview icon row */}
                 <div className="flex items-start justify-between w-full">

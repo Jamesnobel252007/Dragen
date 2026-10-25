@@ -181,12 +181,12 @@ export default function SettingsAlt() {
       <div className="flex-1 flex flex-col min-w-0">
         <Header onMenuClick={() => setSidebarOpen(true)} />
 
-        <main className="flex-1 p-6 sm:p-8 lg:p-10 max-w-6xl w-full mx-auto">
+        <main className="flex-1 p-4 sm:p-8 lg:p-10 max-w-6xl w-full mx-auto">
           {/* Header Row */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 mb-8 border-b border-[#EAE6DF]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 mb-6 sm:mb-8 border-b border-[#EAE6DF]">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <h1 className="text-3xl font-semibold tracking-tight text-[#111110]">
+                <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[#111110]">
                   Workspace Settings
                 </h1>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-widest uppercase bg-[#EAE5DA] text-[#6B665E]">
@@ -207,40 +207,40 @@ export default function SettingsAlt() {
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 animate-pulse">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 sm:gap-8 animate-pulse">
               <div className="md:col-span-4 h-64 bg-[#EBE7DF] rounded-2xl" />
               <div className="md:col-span-8 h-96 bg-[#EBE7DF] rounded-2xl" />
             </div>
           ) : error ? (
-            <div className="p-6 rounded-2xl bg-[#FAECEB] border border-[#F2C0BC] text-[#A63529] max-w-md flex items-center gap-3">
+            <div className="p-4 sm:p-6 rounded-2xl bg-[#FAECEB] border border-[#F2C0BC] text-[#A63529] max-w-md flex items-center gap-3">
               <p className="text-sm font-medium">{error}</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 sm:gap-8 items-start">
               
               {/* LEFT: Navigation Tabs */}
-              <nav className="md:col-span-4 bg-[#FFFFFF] border border-[#E8E3D8] rounded-2xl p-2 shadow-xs space-y-1">
+              <nav className="md:col-span-4 bg-[#FFFFFF] border border-[#E8E3D8] rounded-2xl p-1.5 sm:p-2 shadow-xs flex md:flex-col overflow-x-auto scrollbar-none gap-1.5 md:space-y-1 md:gap-0">
                 {TABS.map((tab) => {
                   const isActive = activeTab === tab.id;
                   return (
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`w-full flex items-start gap-3 px-3.5 py-3 rounded-xl transition-all text-left ${
+                      className={`min-w-[130px] md:min-w-0 md:w-full flex items-center md:items-start gap-2.5 sm:gap-3 px-3 py-2 sm:px-3.5 sm:py-3 rounded-xl transition-all text-left shrink-0 md:shrink ${
                         isActive
                           ? "bg-[#111110] text-[#FAF8F5] shadow-xs"
                           : "text-[#6B665E] hover:text-[#111110] hover:bg-[#F2EFE9]"
                       }`}
                     >
-                      <span className={`mt-0.5 transition-colors ${isActive ? "text-[#FAF8F5]" : "text-[#8C867A]"}`}>
+                      <span className={`mt-0.5 transition-colors shrink-0 ${isActive ? "text-[#FAF8F5]" : "text-[#8C867A]"}`}>
                         {tab.icon}
                       </span>
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-semibold leading-tight">{tab.label}</p>
-                          {isActive && <span className="text-[9px] text-[#B58A3B]">✦</span>}
+                        <div className="flex items-center justify-between gap-1">
+                          <p className="text-xs sm:text-sm font-semibold leading-tight truncate">{tab.label}</p>
+                          {isActive && <span className="text-[9px] text-[#B58A3B] hidden md:inline">✦</span>}
                         </div>
-                        <p className={`text-[11px] truncate mt-0.5 ${isActive ? "text-[#8C867A]" : "text-[#9E9789]"}`}>
+                        <p className={`text-[10px] sm:text-[11px] truncate mt-0.5 hidden sm:block ${isActive ? "text-[#8C867A]" : "text-[#9E9789]"}`}>
                           {tab.caption}
                         </p>
                       </div>
@@ -250,7 +250,7 @@ export default function SettingsAlt() {
               </nav>
 
               {/* RIGHT: Active Tab Content */}
-              <div className="md:col-span-8 bg-[#FFFFFF] border border-[#E8E3D8] rounded-2xl p-6 sm:p-8 shadow-xs">
+              <div className="md:col-span-8 bg-[#FFFFFF] border border-[#E8E3D8] rounded-2xl p-4 sm:p-8 shadow-xs">
                 
                 {/* 1. Account Tab */}
                 {activeTab === "account" && (

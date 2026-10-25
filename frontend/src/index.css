@@ -123,14 +123,38 @@ input {
   margin: 0 0 12px;
 }
 
+/* Hide scrollbar for clean horizontal toolbars */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 @media (max-width: 640px) {
   .dragen-page {
-    min-height: 800px;
-    padding: 32px 24px;
+    min-height: 500px;
+    padding: 24px 16px;
+    border-radius: 12px;
   }
 
   .dragen-page .ProseMirror {
-    min-height: 720px;
+    min-height: 480px;
+    font-size: 15px;
+  }
+
+  .dragen-page .ProseMirror table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 400px) {
+  .dragen-page {
+    padding: 16px 12px;
   }
 }
 

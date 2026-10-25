@@ -64,34 +64,34 @@ function Shared() {
           setSearch={setSearch}
         />
 
-        <main className="flex-1 p-6 sm:p-8 lg:p-10 max-w-7xl w-full mx-auto">
+        <main className="flex-1 p-4 sm:p-8 lg:p-10 max-w-7xl w-full mx-auto">
           {/* Header & Meta */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 mb-8 border-b border-[#EAE6DF]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 mb-6 sm:mb-8 border-b border-[#EAE6DF]">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <h1 className="text-3xl font-semibold tracking-tight text-[#111110]">
+                <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[#111110]">
                   Shared Knowledge
                 </h1>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-widest uppercase bg-[#EAE5DA] text-[#6B665E]">
                   Collaborative
                 </span>
               </div>
-              <p className="text-base text-[#787265]">
+              <p className="text-sm sm:text-base text-[#787265]">
                 Documents shared with team collaborators and neural RAG access.
               </p>
             </div>
 
             {/* Segmented Control Tabs */}
-            <div className="flex p-1 bg-[#F0ECE4] border border-[#E4DFD5] rounded-xl self-start sm:self-auto">
+            <div className="flex w-full sm:w-auto p-1 bg-[#F0ECE4] border border-[#E4DFD5] rounded-xl">
               <button
                 onClick={() => setTab("sharedToMe")}
-                className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
+                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all ${
                   tab === "sharedToMe"
                     ? "bg-[#111110] text-[#FAF8F5] shadow-xs"
                     : "text-[#6B665E] hover:text-[#111110]"
                 }`}
               >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                   <polyline points="22,6 12,13 2,6" />
                 </svg>
@@ -100,13 +100,13 @@ function Shared() {
 
               <button
                 onClick={() => setTab("sharedByMe")}
-                className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
+                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all ${
                   tab === "sharedByMe"
                     ? "bg-[#111110] text-[#FAF8F5] shadow-xs"
                     : "text-[#6B665E] hover:text-[#111110]"
                 }`}
               >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                   <circle cx="9" cy="7" r="4" />
                   <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -119,13 +119,13 @@ function Shared() {
 
           {/* Body Content */}
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 animate-pulse">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 animate-pulse">
               {[0, 1, 2, 3, 4, 5].map((i) => (
                 <div key={i} className="h-44 bg-[#EBE7DF] rounded-2xl" />
               ))}
             </div>
           ) : filteredDocuments.length === 0 ? (
-            <div className="border border-dashed border-[#DCD6C9] bg-[#FFFFFF]/60 rounded-2xl p-14 text-center">
+            <div className="border border-dashed border-[#DCD6C9] bg-[#FFFFFF]/60 rounded-2xl p-8 sm:p-14 text-center">
               <div className="w-12 h-12 rounded-2xl bg-[#F2EFE9] border border-[#E4DFD5] flex items-center justify-center mx-auto mb-4 text-[#8C867A]">
                 <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
                   <circle cx="11" cy="11" r="8" />
@@ -142,12 +142,12 @@ function Shared() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
               {filteredDocuments.map((doc) => (
                 <div
                   key={doc.id}
                   onClick={() => navigate(`/editor/${doc.id}`)}
-                  className="group relative bg-[#FFFFFF] border border-[#E8E3D8] hover:border-[#111110] rounded-2xl p-5 transition-all duration-150 shadow-xs hover:shadow-md flex flex-col justify-between h-44 cursor-pointer"
+                  className="group relative bg-[#FFFFFF] border border-[#E8E3D8] hover:border-[#111110] rounded-2xl p-4 sm:p-5 transition-all duration-150 shadow-xs hover:shadow-md flex flex-col justify-between min-h-[140px] sm:h-44 cursor-pointer"
                 >
                   {/* Card Header */}
                   <div className="flex items-start justify-between w-full">

@@ -98,19 +98,19 @@ useEffect(() => {
           setSearch={setSearch}
         />
 
-        <main className="flex-1 p-6 sm:p-8 lg:p-10 max-w-7xl w-full mx-auto">
+        <main className="flex-1 p-4 sm:p-8 lg:p-10 max-w-7xl w-full mx-auto">
           {/* Header & Warning Banner */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 mb-8 border-b border-[#EAE6DF]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 mb-6 sm:mb-8 border-b border-[#EAE6DF]">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <h1 className="text-3xl font-semibold tracking-tight text-[#111110]">
+                <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[#111110]">
                   Trash Archive
                 </h1>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-widest uppercase bg-[#FAECEB] text-[#A63529] border border-[#F2C0BC]">
                   {filteredDocs.length} Archived
                 </span>
               </div>
-              <p className="text-base text-[#787265]">
+              <p className="text-sm sm:text-base text-[#787265]">
                 Trashed documents will be permanently purged after 30 days.
               </p>
             </div>
@@ -125,7 +125,7 @@ useEffect(() => {
             </div>
           ) : filteredDocs.length === 0 ? (
             /* Empty State */
-            <div className="border border-dashed border-[#DCD6C9] bg-[#FFFFFF]/60 rounded-2xl p-14 text-center">
+            <div className="border border-dashed border-[#DCD6C9] bg-[#FFFFFF]/60 rounded-2xl p-8 sm:p-14 text-center">
               <div className="w-12 h-12 rounded-2xl bg-[#F2EFE9] border border-[#E4DFD5] flex items-center justify-center mx-auto mb-4 text-[#8C867A]">
                 <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
@@ -144,17 +144,17 @@ useEffect(() => {
               {filteredDocs.map((doc) => (
                 <div
                   key={doc.id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-5 py-4 hover:bg-[#FAF8F5] transition-colors"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 px-4 py-3.5 sm:px-5 sm:py-4 hover:bg-[#FAF8F5] transition-colors"
                 >
                   {/* Left: Document Info */}
-                  <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="flex items-center gap-3 sm:gap-3.5 min-w-0 flex-1">
                     <div className="w-9 h-9 rounded-xl bg-[#FAF8F5] border border-[#EAE6DF] flex items-center justify-center text-[#8C867A] shrink-0">
                       <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                         <polyline points="14 2 14 8 20 8" />
                       </svg>
                     </div>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <h3 className="text-base font-semibold text-[#111110] truncate">
                         {doc.title || "Untitled Document"}
                       </h3>
@@ -165,10 +165,10 @@ useEffect(() => {
                   </div>
 
                   {/* Right: Actions */}
-                  <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                  <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto shrink-0 pt-2 sm:pt-0 border-t sm:border-0 border-[#EAE6DF]/60">
                     <button
                       onClick={() => restore(doc.id)}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#E4DFD5] bg-[#FFFFFF] hover:bg-[#F2EFE9] text-xs font-semibold text-[#111110] transition-colors"
+                      className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-[#E4DFD5] bg-[#FFFFFF] hover:bg-[#F2EFE9] text-xs font-semibold text-[#111110] transition-colors flex-1 sm:flex-none"
                     >
                       <svg className="w-3.5 h-3.5 text-[#6B665E]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <polyline points="1 4 1 10 7 10" />
@@ -179,7 +179,7 @@ useEffect(() => {
 
                     <button
                       onClick={() => deleteForever(doc.id)}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#F2C0BC] bg-[#FAECEB] hover:bg-[#F7D8D6] text-xs font-semibold text-[#A63529] transition-colors"
+                      className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-[#F2C0BC] bg-[#FAECEB] hover:bg-[#F7D8D6] text-xs font-semibold text-[#A63529] transition-colors flex-1 sm:flex-none"
                     >
                       <svg className="w-3.5 h-3.5 text-[#A63529]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <line x1="18" y1="6" x2="6" y2="18" />

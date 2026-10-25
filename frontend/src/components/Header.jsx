@@ -20,6 +20,9 @@ function Header({
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
+  // Mobile search toggle
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+
   const profileRef = useRef(null);
   const notificationRef = useRef(null);
 
@@ -286,17 +289,18 @@ function Header({
   };
 
   return (
-    <header className="h-16 flex items-center justify-between gap-4 px-5 lg:px-8 border-b border-[#EAE6DF] bg-[#FAF8F5]/90 backdrop-blur-md sticky top-0 z-30 transition-all font-sans">
+    <header className="min-h-14 sm:min-h-16 py-2 px-3 sm:px-6 lg:px-8 border-b border-[#EAE6DF] bg-[#FAF8F5]/90 backdrop-blur-md sticky top-0 z-30 transition-all font-sans flex flex-col justify-center">
 
-      {/* LEFT */}
-      <div className="flex items-center gap-3.5 flex-1 min-w-0">
+      <div className="flex items-center justify-between gap-2 sm:gap-4 w-full">
+        {/* LEFT */}
+        <div className="flex items-center gap-2 sm:gap-3.5 flex-1 min-w-0">
 
-        {/* MOBILE MENU */}
-        <button
-          onClick={onMenuClick}
-          className="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl text-[#6B665E] hover:text-[#111110] hover:bg-[#F2EFE9] transition-colors shrink-0"
-          aria-label="Open menu"
-        >
+          {/* MOBILE MENU */}
+          <button
+            onClick={onMenuClick}
+            className="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl text-[#6B665E] hover:text-[#111110] hover:bg-[#F2EFE9] active:scale-95 transition-all shrink-0"
+            aria-label="Open menu"
+          >
           <svg
             width="20"
             height="20"
@@ -342,15 +346,35 @@ function Header({
             <span className="text-[9px] text-[#B58A3B]">
               ✦
             </span>
-
-           
           </div>
 
         </div>
       </div>
 
       {/* RIGHT */}
-      <div className="flex items-center gap-3 shrink-0">
+      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+
+        {/* MOBILE SEARCH TOGGLE */}
+        <button
+          type="button"
+          onClick={() => setMobileSearchOpen((prev) => !prev)}
+            className="sm:hidden w-9 h-9 flex items-center justify-center rounded-xl text-[#6B665E] hover:text-[#111110] hover:bg-[#F2EFE9] transition-colors"
+            aria-label="Toggle search"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          </button>
 
         {/* =========================================
             NOTIFICATIONS
@@ -406,7 +430,7 @@ function Header({
           ========================================== */}
 
           {notificationOpen && (
-            <div className="absolute right-0 top-12 w-[360px] max-w-[calc(100vw-2rem)] bg-[#FAF8F5] border border-[#E4DFD5] rounded-2xl shadow-2xl shadow-[#111110]/10 z-50 overflow-hidden">
+            <div className="fixed sm:absolute left-2.5 right-2.5 sm:left-auto sm:right-0 top-14 sm:top-12 w-auto sm:w-[360px] max-w-[calc(100vw-1.25rem)] bg-[#FAF8F5] border border-[#E4DFD5] rounded-2xl shadow-2xl shadow-[#111110]/15 z-50 overflow-hidden">
 
               {/* HEADER */}
 
@@ -631,7 +655,7 @@ function Header({
           {/* PROFILE DROPDOWN */}
 
           {profileOpen && (
-            <div className="absolute right-0 top-12 w-72 bg-[#FAF8F5] border border-[#E4DFD5] rounded-2xl shadow-2xl shadow-[#111110]/10 p-2 z-50 animate-in fade-in zoom-in-95 duration-100">
+            <div className="fixed sm:absolute left-2.5 right-2.5 sm:left-auto sm:right-0 top-14 sm:top-12 w-auto sm:w-72 max-w-[calc(100vw-1.25rem)] bg-[#FAF8F5] border border-[#E4DFD5] rounded-2xl shadow-2xl shadow-[#111110]/15 p-2 z-50 animate-in fade-in zoom-in-95 duration-100">
               
               {/* User Overview */}
               <div className="px-3.5 py-3 mb-1.5 rounded-xl bg-[#F3EFE8] border border-[#E9E4DB] flex items-center gap-3">
@@ -715,7 +739,38 @@ function Header({
           )}
         </div>
 
+        </div>
       </div>
+
+      {/* MOBILE SEARCH BAR SLIDE-DOWN */}
+      {mobileSearchOpen && (
+        <div className="sm:hidden pt-2 pb-1 w-full animate-in fade-in slide-in-from-top-1 duration-150">
+          <div className="relative flex items-center w-full">
+            <div className="absolute left-3 text-[#9E9789] pointer-events-none">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              placeholder="Ask AI or search documents..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              autoFocus
+              className="w-full pl-9 pr-9 py-2 text-sm rounded-xl border border-[#E4DFD5] bg-[#FFFFFF] text-[#111110] placeholder:text-[#9E9789] outline-none focus:border-[#111110] focus:ring-2 focus:ring-[#111110]/5 transition-all"
+            />
+            <button
+              type="button"
+              onClick={() => setMobileSearchOpen(false)}
+              className="absolute right-2 text-xs font-semibold text-[#8C867A] hover:text-[#111110] p-1.5"
+              aria-label="Close search"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

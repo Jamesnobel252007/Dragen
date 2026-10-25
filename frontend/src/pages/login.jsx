@@ -123,7 +123,7 @@ export default function Login() {
       </div>
 
       {/* RIGHT — Form Panel */}
-      <div className="w-full lg:w-[50%] xl:w-[48%] flex items-center justify-center p-8 sm:p-12 lg:p-16">
+      <div className="w-full lg:w-[50%] xl:w-[48%] flex items-center justify-center px-4 py-8 sm:p-12 lg:p-16">
         <div className="w-full max-w-sm">
           
           {/* Mobile Header */}
@@ -155,7 +155,7 @@ export default function Login() {
                 htmlFor="username"
                 className="block text-xs font-semibold uppercase tracking-wider text-[#6B665E] mb-1.5"
               >
-                Username or Email
+                Username
               </label>
               <input
                 id="username"
@@ -164,7 +164,7 @@ export default function Login() {
                 autoComplete="username"
                 value={form.username}
                 onChange={handleChange}
-                placeholder="developer@dragen.ai"
+                placeholder="Enter your username"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-[#E4DFD5] bg-[#FFFFFF] text-sm text-[#111110] placeholder:text-[#A8A194] outline-none focus:border-[#111110] focus:ring-4 focus:ring-[#111110]/5 transition-all"
               />
             </div>

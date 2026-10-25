@@ -57,7 +57,7 @@ export default function Register() {
         }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
         throw new Error(
@@ -146,7 +146,7 @@ export default function Register() {
       </div>
 
       {/* RIGHT — form panel */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-4 py-8 sm:p-12">
         <div className="w-full max-w-sm">
           <div className="lg:hidden flex items-center gap-2 mb-10">
             <div className="w-7 h-7 rounded-md bg-[#3D5AFE] flex items-center justify-center">

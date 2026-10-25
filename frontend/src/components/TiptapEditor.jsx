@@ -580,7 +580,7 @@ function TiptapEditor({
   return (
     <div className="w-full flex flex-col items-center">
       {/* ----------------- WORD-LIKE RICH TOOLBAR ----------------- */}
-      <div className="sticky top-20 z-30 mb-8 flex flex-wrap items-center gap-1 p-2 rounded-2xl bg-[#FAF8F5]/95 backdrop-blur-md border border-[#E4DFD5] shadow-lg shadow-[#111110]/5 max-w-full">
+      <div className="sticky top-[92px] sm:top-20 z-30 mb-4 sm:mb-8 flex flex-nowrap sm:flex-wrap items-center gap-1 p-1.5 sm:p-2 rounded-xl sm:rounded-2xl bg-[#FAF8F5]/95 backdrop-blur-md border border-[#E4DFD5] shadow-lg shadow-[#111110]/5 max-w-full w-full overflow-x-auto scrollbar-none">
         
         {/* 1. History (Undo / Redo) */}
         <div className="flex items-center gap-0.5 pr-1 border-r border-[#EAE6DF]">
@@ -785,7 +785,7 @@ function TiptapEditor({
             </button>
 
             {showColorPalette && (
-              <div className="absolute top-10 left-0 z-50 p-2.5 bg-[#FFFFFF] border border-[#E4DFD5] rounded-xl shadow-xl flex flex-col gap-2 w-44">
+              <div className="absolute top-10 left-0 z-50 p-2.5 bg-[#FFFFFF] border border-[#E4DFD5] rounded-xl shadow-xl flex flex-col gap-2 w-44 max-w-[calc(100vw-2rem)]">
                 <span className="text-[11px] font-semibold text-[#6B665E] uppercase tracking-wider">Palette</span>
                 <div className="grid grid-cols-5 gap-1.5">
                   {["#111110", "#475569", "#dc2626", "#ea580c", "#d97706", "#059669", "#0284c7", "#2563eb", "#7c3aed", "#db2777"].map((c) => (
@@ -833,7 +833,7 @@ function TiptapEditor({
             </button>
 
             {showHighlightPalette && (
-              <div className="absolute top-10 left-0 z-50 p-2.5 bg-[#FFFFFF] border border-[#E4DFD5] rounded-xl shadow-xl flex flex-col gap-2 w-40">
+              <div className="absolute top-10 left-0 z-50 p-2.5 bg-[#FFFFFF] border border-[#E4DFD5] rounded-xl shadow-xl flex flex-col gap-2 w-40 max-w-[calc(100vw-2rem)]">
                 <span className="text-[11px] font-semibold text-[#6B665E] uppercase tracking-wider">Highlights</span>
                 <div className="grid grid-cols-4 gap-1.5">
                   {[
@@ -1035,7 +1035,7 @@ function TiptapEditor({
             </button>
 
             {showTableMenu && (
-              <div className="absolute top-10 left-0 z-50 p-2 bg-[#FFFFFF] border border-[#E4DFD5] rounded-xl shadow-xl flex flex-col gap-1 w-48 text-xs font-medium">
+              <div className="absolute top-10 left-0 z-50 p-2 bg-[#FFFFFF] border border-[#E4DFD5] rounded-xl shadow-xl flex flex-col gap-1 w-48 max-w-[calc(100vw-2rem)] text-xs font-medium">
                 <button
                   type="button"
                   onClick={() => insertTable(3, 3)}
@@ -1189,7 +1189,7 @@ function TiptapEditor({
 
       {/* ----------------- LINK POPUP MODAL ----------------- */}
       {showLinkModal && (
-        <div className="w-full max-w-[400px] mb-4 p-3 rounded-2xl bg-[#FFFFFF] border border-[#E4DFD5] shadow-xl flex items-center gap-2">
+        <div className="w-full max-w-[calc(100vw-2rem)] sm:max-w-[400px] mb-4 p-3 rounded-2xl bg-[#FFFFFF] border border-[#E4DFD5] shadow-xl flex items-center gap-2">
           <input
             type="url"
             placeholder="https://example.com"
@@ -1218,7 +1218,7 @@ function TiptapEditor({
 
       {/* ----------------- IMAGE INSERT MODAL ----------------- */}
       {showImageModal && (
-        <div className="w-full max-w-[440px] mb-4 p-4 rounded-2xl bg-[#FFFFFF] border border-[#E4DFD5] shadow-xl flex flex-col gap-3">
+        <div className="w-full max-w-[calc(100vw-2rem)] sm:max-w-[440px] mb-4 p-4 rounded-2xl bg-[#FFFFFF] border border-[#E4DFD5] shadow-xl flex flex-col gap-3">
           <div className="flex items-center justify-between border-b border-[#EAE6DF] pb-2">
             <span className="text-xs font-bold text-[#111110]">Insert Image</span>
             <button
@@ -1295,7 +1295,7 @@ function TiptapEditor({
       </div>
 
       {/* ----------------- STATUS & WORD COUNT FOOTER ----------------- */}
-      <div className="w-full max-w-[794px] mt-4 py-2 px-4 flex items-center justify-between text-xs font-mono text-[#8C867A] border-t border-[#EAE6DF]">
+      <div className="w-full max-w-[794px] mt-4 py-2 px-2 sm:px-4 flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-[#8C867A] border-t border-[#EAE6DF]">
         <div className="flex items-center gap-4">
           <span>{wordCount} words</span>
           <span>{charCount} characters</span>

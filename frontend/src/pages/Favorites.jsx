@@ -97,19 +97,19 @@ const toggleFavorite = async (id, value) => {
           setSearch={setSearch}
         />
 
-        <main className="flex-1 p-6 sm:p-8 lg:p-10 max-w-7xl w-full mx-auto">
+        <main className="flex-1 p-4 sm:p-8 lg:p-10 max-w-7xl w-full mx-auto">
           {/* Header & Metadata */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 mb-8 border-b border-[#EAE6DF]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 mb-6 sm:mb-8 border-b border-[#EAE6DF]">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <h1 className="text-3xl font-semibold tracking-tight text-[#111110]">
+                <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[#111110]">
                   Starred Knowledge
                 </h1>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-widest uppercase bg-[#EAE5DA] text-[#6B665E]">
                   {filtered.length} Pinned
                 </span>
               </div>
-              <p className="text-base text-[#787265]">
+              <p className="text-sm sm:text-base text-[#787265]">
                 Quick-access records and prioritized reference documents.
               </p>
             </div>
@@ -117,14 +117,14 @@ const toggleFavorite = async (id, value) => {
 
           {/* Loading State */}
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 animate-pulse">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 animate-pulse">
               {[0, 1, 2, 3, 4, 5].map((i) => (
                 <div key={i} className="h-44 bg-[#EBE7DF] rounded-2xl" />
               ))}
             </div>
           ) : filtered.length === 0 ? (
             /* Empty State */
-            <div className="border border-dashed border-[#DCD6C9] bg-[#FFFFFF]/60 rounded-2xl p-14 text-center">
+            <div className="border border-dashed border-[#DCD6C9] bg-[#FFFFFF]/60 rounded-2xl p-8 sm:p-14 text-center">
               <div className="w-12 h-12 rounded-2xl bg-[#F2EFE9] border border-[#E4DFD5] flex items-center justify-center mx-auto mb-4 text-[#B58A3B]">
                 <svg className="w-6 h-6 fill-current" viewBox="0 0 20 20">
                   <polygon points="10 2 12.5 7.5 18 8.3 14 12.2 15 17.5 10 14.8 5 17.5 6 12.2 2 8.3 7.5 7.5 10 2" />
@@ -145,12 +145,12 @@ const toggleFavorite = async (id, value) => {
             </div>
           ) : (
             /* Document Grid */
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
               {filtered.map((doc) => (
                 <div
                   key={doc.id}
                   onClick={() => navigate(`/editor/${doc.id}`)}
-                  className="group relative bg-[#FFFFFF] border border-[#E8E3D8] hover:border-[#111110] rounded-2xl p-5 transition-all duration-150 shadow-xs hover:shadow-md flex flex-col justify-between h-44 cursor-pointer"
+                  className="group relative bg-[#FFFFFF] border border-[#E8E3D8] hover:border-[#111110] rounded-2xl p-4 sm:p-5 transition-all duration-150 shadow-xs hover:shadow-md flex flex-col justify-between min-h-[140px] sm:h-44 cursor-pointer"
                 >
                   {/* Top Preview & Star Toggle */}
                   <div className="flex items-start justify-between w-full">

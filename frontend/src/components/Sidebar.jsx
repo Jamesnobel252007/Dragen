@@ -64,39 +64,54 @@ function Sidebar({ isOpen, onClose }) {
       {/* Mobile overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-[#111110]/30 backdrop-blur-xs z-30 lg:hidden transition-opacity"
+          className="fixed inset-0 bg-[#111110]/40 backdrop-blur-xs z-40 lg:hidden transition-opacity"
           onClick={onClose}
+          aria-hidden="true"
         />
       )}
 
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-40 w-72 bg-[#FAF8F5] border-r border-[#EAE6DF] flex flex-col justify-between transition-transform duration-200 ease-out font-sans ${
+        className={`fixed lg:static inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-[#FAF8F5] border-r border-[#EAE6DF] flex flex-col justify-between transition-transform duration-200 ease-out font-sans shadow-2xl lg:shadow-none ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0`}
       >
         {/* TOP: Brand Header & Workspace Nav */}
-        <div>
-          <div className="h-16 flex items-center justify-between px-5 border-b border-[#EAE6DF]">
+        <div className="flex flex-col min-h-0 flex-1">
+          <div className="h-16 flex items-center justify-between px-5 border-b border-[#EAE6DF] shrink-0">
             <div className="flex items-center gap-3">
-              <div className="">
+              <div>
                 <img src={logo} alt="Logo" className="w-10 h-10 rounded" />
               </div>
               <div className="flex items-baseline gap-1.5">
                 <span className="text-base font-semibold tracking-tight text-[#111110]">
                   DRAGEN
                 </span>
-                
               </div>
             </div>
             
-            {/* AI badge */}
-            <span className="text-[10px] font-bold text-[#B58A3B] bg-[#F2EFE9] border border-[#E4DFD5] px-2 py-0.5 rounded-md tracking-wider">
-              ✦ 2.5
-            </span>
+            <div className="flex items-center gap-2">
+              {/* AI badge */}
+              <span className="text-[10px] font-bold text-[#B58A3B] bg-[#F2EFE9] border border-[#E4DFD5] px-2 py-0.5 rounded-md tracking-wider">
+                ✦ 2.5
+              </span>
+
+              {/* Close Action on Mobile */}
+              <button
+                type="button"
+                onClick={onClose}
+                className="lg:hidden w-8 h-8 flex items-center justify-center rounded-lg text-[#6B665E] hover:text-[#111110] hover:bg-[#EFECE5] active:scale-95 transition-all"
+                aria-label="Close menu"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           {/* Navigation List */}
-          <nav className="p-3.5 space-y-1 overflow-y-auto">
+          <nav className="p-3.5 space-y-1 overflow-y-auto flex-1 overscroll-contain">
             <div className="px-3 pt-2.5 pb-1.5 text-[11px] font-semibold text-[#9E9789] uppercase tracking-wider">
               Workspace
             </div>
@@ -110,14 +125,14 @@ function Sidebar({ isOpen, onClose }) {
                     navigate(item.path);
                     onClose?.();
                   }}
-                  className={`w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-base font-medium transition-all group text-left ${
+                  className={`w-full min-h-[44px] flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-base font-medium transition-all group text-left ${
                     active
                       ? "bg-[#111110] text-[#FAF8F5] shadow-xs"
                       : "text-[#4D4942] hover:text-[#111110] hover:bg-[#F2EFE9]"
                   }`}
                 >
                   <span
-                    className={`transition-colors ${
+                    className={`transition-colors shrink-0 ${
                       active
                         ? "text-[#FAF8F5]"
                         : "text-[#847E72] group-hover:text-[#111110]"
@@ -125,7 +140,7 @@ function Sidebar({ isOpen, onClose }) {
                   >
                     {item.icon}
                   </span>
-                  <span>{item.label}</span>
+                  <span className="truncate">{item.label}</span>
                 </button>
               );
             })}
@@ -133,20 +148,20 @@ function Sidebar({ isOpen, onClose }) {
         </div>
 
         {/* BOTTOM: Settings Action */}
-        <div className="p-3.5 border-t border-[#EAE6DF] bg-[#F7F4EF]">
+        <div className="p-3.5 border-t border-[#EAE6DF] bg-[#F7F4EF] shrink-0">
           <button
             onClick={() => {
               navigate("/settings");
               onClose?.();
             }}
-            className={`w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-base font-medium transition-all group text-left ${
+            className={`w-full min-h-[44px] flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-base font-medium transition-all group text-left ${
               location.pathname === "/settings"
                 ? "bg-[#111110] text-[#FAF8F5] shadow-xs"
                 : "text-[#4D4942] hover:text-[#111110] hover:bg-[#EFECE5]"
             }`}
           >
             <span
-              className={`transition-colors ${
+              className={`transition-colors shrink-0 ${
                 location.pathname === "/settings"
                   ? "text-[#FAF8F5]"
                   : "text-[#847E72] group-hover:text-[#111110]"
@@ -157,7 +172,7 @@ function Sidebar({ isOpen, onClose }) {
                 <path d="M16.2 12.3a1.5 1.5 0 0 0 .3 1.7l.1.1a1.7 1.7 0 1 1-2.4 2.4l-.1-.1a1.5 1.5 0 0 0-1.7-.3 1.5 1.5 0 0 0-1 1.4V18a1.7 1.7 0 1 1-3.4 0v-.5a1.5 1.5 0 0 0-1-1.4 1.5 1.5 0 0 0-1.7.3l-.1.1a1.7 1.7 0 1 1-2.4-2.4l.1-.1a1.5 1.5 0 0 0 .3-1.7 1.5 1.5 0 0 0-1.4-1H2a1.7 1.7 0 1 1 0-3.4h.5a1.5 1.5 0 0 0 1.4-1 1.5 1.5 0 0 0-.3-1.7l-.1-.1a1.7 1.7 0 1 1 2.4-2.4l.1.1a1.5 1.5 0 0 0 1.7.3 1.5 1.5 0 0 0 1-1.4V2a1.7 1.7 0 1 1 3.4 0v.5a1.5 1.5 0 0 0 1 1.4 1.5 1.5 0 0 0 1.7-.3l.1-.1a1.7 1.7 0 1 1 2.4 2.4l-.1.1a1.5 1.5 0 0 0-.3 1.7 1.5 1.5 0 0 0 1.4 1H18a1.7 1.7 0 1 1 0 3.4h-.5a1.5 1.5 0 0 0-1.4 1Z" />
               </svg>
             </span>
-            <span>Settings</span>
+            <span className="truncate">Settings</span>
           </button>
         </div>
       </aside>

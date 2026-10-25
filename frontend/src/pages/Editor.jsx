@@ -21,6 +21,7 @@ function Editor() {
   const [isPdfDocument, setIsPdfDocument] = useState(false);
   const [pdfExtracting, setPdfExtracting] = useState(false);
   const [pdfExtractError, setPdfExtractError] = useState("");
+  const [pdfWarnings, setPdfWarnings] = useState([]);
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareEmail, setShareEmail] = useState("");
   const [shareRole, setShareRole] = useState("viewer");
@@ -65,6 +66,20 @@ const [aiError, setAiError] = useState("");
       }
     };
   }, [fileUrl]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setProfileOpen(false);
+      }
+    };
+    if (profileOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [profileOpen]);
 
   // Create a fresh document when arriving via /editor/new, then swap the
   // URL to the real id so refresh, sharing, and the WebSocket all work.
@@ -278,7 +293,6 @@ const [aiError, setAiError] = useState("");
   const [proposedExplanation, setProposedExplanation] = useState("");
   const [capturedSelection, setCapturedSelection] = useState("");
   const [customWritingInstruction, setCustomWritingInstruction] = useState("");
-  const [pdfWarnings, setPdfWarnings] = useState([]);
 
   const isDirtyRef = useRef(false);
   const saveVersionRef = useRef(0);
@@ -803,239 +817,337 @@ const [aiError, setAiError] = useState("");
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-[#111110] font-sans antialiased selection:bg-[#111110] selection:text-[#FAF8F5]">
       {/* Editorial Studio Header */}
-      <header className="sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-[#EAE6DF] px-4 sm:px-8 py-3 flex items-center justify-between transition-all">
-        {/* Left: Navigation & Document Title */}
-        <div className="flex items-center gap-3.5 min-w-0 flex-1 mr-4">
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="w-9 h-9 rounded-xl hover:bg-[#F2EFE9] border border-transparent hover:border-[#E4DFD5] flex items-center justify-center text-[#6B665E] hover:text-[#111110] transition shrink-0"
-            title="Back to dashboard"
-          >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-          </button>
+      <header ref={profileRef} className="sticky top-0 z-40 bg-[#FAF8F5]/95 backdrop-blur-md border-b border-[#EAE6DF] px-3 sm:px-8 py-2.5 sm:py-3 transition-all">
+        {/* DESKTOP (screens >= sm) Layout */}
+        <div className="hidden sm:flex items-center justify-between">
+          {/* Left: Navigation & Document Title */}
+          <div className="flex items-center gap-3.5 min-w-0 flex-1 mr-4">
+            <button
+              onClick={() => navigate("/dashboard")}
+              className="w-9 h-9 rounded-xl hover:bg-[#F2EFE9] border border-transparent hover:border-[#E4DFD5] flex items-center justify-center text-[#6B665E] hover:text-[#111110] transition shrink-0"
+              title="Back to dashboard"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
 
-          <div className="w-9 h-9 rounded-xl bg-[#111110] text-[#FAF8F5] border border-[#2D2C29] flex items-center justify-center text-sm font-bold shadow-xs shrink-0">
-            D
+            <div className="w-9 h-9 rounded-xl bg-[#111110] text-[#FAF8F5] border border-[#2D2C29] flex items-center justify-center text-sm font-bold shadow-xs shrink-0">
+              D
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <input
+                value={title}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  setStatus("Unsaved changes");
+                }}
+                className="w-full text-base sm:text-lg font-semibold bg-transparent outline-none border-b border-transparent focus:border-[#111110] text-[#111110] truncate transition-colors"
+                placeholder="Untitled Document"
+              />
+
+              <div className="flex items-center gap-2 mt-0.5">
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    status === "Saved" ? "bg-[#10B981]" : "bg-[#D97706] animate-pulse"
+                  }`}
+                />
+                <span className="text-[10px] sm:text-[11px] font-mono text-[#8C867A] uppercase tracking-wider">
+                  {status}
+                </span>
+              </div>
+            </div>
           </div>
 
-          <div className="min-w-0 flex-1">
-            <input
-              value={title}
-              onChange={(e) => {
-                setTitle(e.target.value);
-                setStatus("Unsaved changes");
-              }}
-              className="w-full text-base sm:text-lg font-semibold bg-transparent outline-none border-b border-transparent focus:border-[#111110] text-[#111110] truncate transition-colors"
-              placeholder="Untitled Document"
-            />
+          {/* Right: Actions & User Avatar */}
+          <div className="flex items-center gap-2.5 shrink-0">
+            <button
+              disabled={sharing}
+              onClick={() => setShowShareModal(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#E4DFD5] bg-[#FFFFFF] hover:bg-[#F2EFE9] text-xs font-semibold text-[#111110] transition shadow-xs"
+              title="Share document"
+            >
+              <svg className="w-3.5 h-3.5 text-[#6B665E]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="18" cy="5" r="3" />
+                <circle cx="6" cy="12" r="3" />
+                <circle cx="18" cy="19" r="3" />
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+              </svg>
+              <span>{sharing ? "Sharing..." : "Share"}</span>
+            </button>
 
-            <div className="flex items-center gap-2 mt-0.5">
-              <span
-                className={`w-1.5 h-1.5 rounded-full ${status === "Saved" ? "bg-[#10B981]" : "bg-[#D97706] animate-pulse"
+            <button
+              onClick={saveDocument}
+              className="px-4 py-2 rounded-xl bg-[#111110] hover:bg-[#262422] text-[#FAF8F5] text-xs font-semibold active:scale-[0.98] transition shadow-xs flex items-center gap-1.5"
+            >
+              <span>Save</span>
+            </button>
+
+            <div className="relative">
+              <select
+                defaultValue=""
+                onChange={(e) => {
+                  exportDocument(e.target.value);
+                  e.target.value = "";
+                }}
+                className="px-3 py-2 rounded-xl border border-[#E4DFD5] bg-[#FFFFFF] hover:bg-[#F2EFE9] text-xs font-semibold text-[#111110] outline-none transition cursor-pointer appearance-none pr-7 shadow-xs"
+              >
+                <option value="" disabled>
+                  Export
+                </option>
+                <option value="pdf">PDF Document (.pdf)</option>
+                <option value="doc">Word Document (.doc)</option>
+                <option value="html">HTML Webpage (.html)</option>
+                <option value="markdown">Markdown (.md)</option>
+                <option value="txt">Plain Text (.txt)</option>
+                <option value="excel">Excel Sheet (.xlsx)</option>
+              </select>
+              <svg
+                className="w-3 h-3 text-[#8C867A] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
+                viewBox="0 0 12 12"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M3 4.5L6 7.5L9 4.5" />
+              </svg>
+            </div>
+
+            <div className="h-5 w-[1px] bg-[#EAE6DF] mx-1" />
+
+            <div className="relative">
+              <button
+                onClick={() => setProfileOpen((prev) => !prev)}
+                className="flex items-center gap-2 p-1 rounded-full hover:bg-[#F2EFE9] transition-colors focus:outline-none"
+                aria-label="Open account menu"
+                aria-expanded={profileOpen}
+              >
+                <div className="w-9 h-9 rounded-full bg-[#111110] text-[#FAF8F5] border border-[#2D2C29] flex items-center justify-center text-sm font-semibold shadow-xs">
+                  {avatarLetter}
+                </div>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 12 12"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  className={`text-[#847E72] transition-transform duration-200 ${
+                    profileOpen ? "rotate-180 text-[#111110]" : ""
                   }`}
-              />
-              <span className="text-[11px] font-mono text-[#8C867A] uppercase tracking-wider">
-                {status}
-              </span>
+                >
+                  <path d="M3 4.5L6 7.5L9 4.5" />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Right: Actions & User Avatar */}
-        <div className="flex items-center gap-2.5 shrink-0">
-          <button
-            disabled={sharing}
-            onClick={() => setShowShareModal(true)}
-            className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#E4DFD5] bg-[#FFFFFF] hover:bg-[#F2EFE9] text-xs font-semibold text-[#111110] transition shadow-xs"
-          >
-            <svg className="w-3.5 h-3.5 text-[#6B665E]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="18" cy="5" r="3" />
-              <circle cx="6" cy="12" r="3" />
-              <circle cx="18" cy="19" r="3" />
-              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-            </svg>
-            <span>{sharing ? "Sharing..." : "Share"}</span>
-          </button>
-
-          <button
-            onClick={saveDocument}
-            className="px-4 py-2 rounded-xl bg-[#111110] hover:bg-[#262422] text-[#FAF8F5] text-xs font-semibold active:scale-[0.98] transition shadow-xs flex items-center gap-1.5"
-          >
-            <span>Save</span>
-          </button>
-
-          <div className="relative">
-            <select
-              defaultValue=""
-              onChange={(e) => {
-                exportDocument(e.target.value);
-                e.target.value = "";
-              }}
-              className="px-3 py-2 rounded-xl border border-[#E4DFD5] bg-[#FFFFFF] hover:bg-[#F2EFE9] text-xs font-semibold text-[#111110] outline-none transition cursor-pointer appearance-none pr-7 shadow-xs"
-            >
-              <option value="" disabled>
-                Export
-              </option>
-              <option value="pdf">PDF Document (.pdf)</option>
-              <option value="doc">Word Document (.doc)</option>
-              <option value="html">HTML Webpage (.html)</option>
-              <option value="markdown">Markdown (.md)</option>
-              <option value="txt">Plain Text (.txt)</option>
-              <option value="excel">Excel Sheet (.xlsx)</option>
-            </select>
-            <svg
-              className="w-3 h-3 text-[#8C867A] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
-              viewBox="0 0 12 12"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M3 4.5L6 7.5L9 4.5" />
-            </svg>
-          </div>
-
-          <div className="h-5 w-[1px] bg-[#EAE6DF] mx-1 hidden sm:block" />
-
-          <div
-            ref={profileRef}
-            className="relative"
-          >
-
+        {/* MOBILE (screens < sm) Layout - Two Clean Non-Overlapping Rows */}
+        <div className="flex sm:hidden flex-col gap-2">
+          {/* Row 1: Back Button, Title Input, Save Pill, Profile Avatar */}
+          <div className="flex items-center gap-2 w-full">
             <button
-              onClick={() =>
-                setProfileOpen((prev) => !prev)
-              }
-              className="flex items-center gap-2 p-1 rounded-full hover:bg-[#F2EFE9] transition-colors focus:outline-none"
-              aria-label="Open account menu"
-              aria-expanded={profileOpen}
+              onClick={() => navigate("/dashboard")}
+              className="w-8 h-8 rounded-lg hover:bg-[#F2EFE9] border border-[#E4DFD5] flex items-center justify-center text-[#6B665E] hover:text-[#111110] transition shrink-0"
+              title="Back to dashboard"
             >
-
-              <div className="w-9 h-9 rounded-full bg-[#111110] text-[#FAF8F5] border border-[#2D2C29] flex items-center justify-center text-sm font-semibold shadow-xs">
-                {avatarLetter}
-              </div>
-
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 12 12"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-                className={`text-[#847E72] transition-transform duration-200 ${profileOpen
-                  ? "rotate-180 text-[#111110]"
-                  : ""
-                  }`}
-              >
-                <path d="M3 4.5L6 7.5L9 4.5" />
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="15 18 9 12 15 6" />
               </svg>
-
             </button>
 
-            {/* PROFILE DROPDOWN */}
+            <div className="min-w-0 flex-1">
+              <input
+                value={title}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  setStatus("Unsaved changes");
+                }}
+                className="w-full text-sm font-semibold bg-transparent outline-none border-b border-transparent focus:border-[#111110] text-[#111110] truncate transition-colors"
+                placeholder="Untitled Document"
+              />
+            </div>
 
-            {profileOpen && (
-              <div className="absolute right-0 top-12 w-72 bg-[#FAF8F5] border border-[#E4DFD5] rounded-2xl shadow-2xl shadow-[#111110]/10 p-2 z-50 animate-in fade-in zoom-in-95 duration-100">
+            <button
+              onClick={saveDocument}
+              className="px-3 py-1.5 rounded-lg bg-[#111110] hover:bg-[#262422] text-[#FAF8F5] text-xs font-semibold active:scale-[0.98] transition shadow-xs shrink-0"
+            >
+              Save
+            </button>
 
-                {/* User Overview */}
-                <div className="px-3.5 py-3 mb-1.5 rounded-xl bg-[#F3EFE8] border border-[#E9E4DB] flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#111110] flex items-center justify-center text-[#FAF8F5] text-base font-semibold shrink-0 shadow-xs">
-                    {avatarLetter}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <p className="text-base font-semibold text-[#111110] truncate leading-tight">
-                        {currentUser?.username || "User"}
-                      </p>
-                      <span className="px-1.5 py-0.2 rounded text-[10px] font-bold uppercase tracking-wider bg-[#E8E2D6] text-[#6B665E]">
-                        PRO
-                      </span>
-                    </div>
-                    <p className="text-xs text-[#847E72] truncate mt-0.5">
-                      {currentUser?.email || "No email connected"}
-                    </p>
-                  </div>
-                </div>
+            <button
+              onClick={() => setProfileOpen((prev) => !prev)}
+              className="w-8 h-8 rounded-full bg-[#111110] text-[#FAF8F5] border border-[#2D2C29] flex items-center justify-center text-xs font-semibold shadow-xs shrink-0"
+              aria-label="Open account menu"
+            >
+              {avatarLetter}
+            </button>
+          </div>
 
-                {/* Actions List */}
-                <div className="space-y-0.5">
-                  <button
-                    onClick={() => {
-                      setProfileOpen(false);
-                      navigate("/profile");
-                    }}
-                    className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-base font-medium text-[#4D4942] hover:text-[#111110] hover:bg-[#F0EBE3] transition-colors text-left group"
-                  >
-                    <svg className="w-4 h-4 text-[#9E9789] group-hover:text-[#111110] transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                      <circle cx="12" cy="7" r="4" />
-                    </svg>
-                    <span>Profile</span>
-                  </button>
+          {/* Row 2: Status Indicator (Left) & Quick Actions (Right) */}
+          <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-[#EAE6DF]/70">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span
+                className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                  status === "Saved" ? "bg-[#10B981]" : "bg-[#D97706] animate-pulse"
+                }`}
+              />
+              <span className="text-[10px] font-mono text-[#8C867A] uppercase tracking-wider truncate">
+                {status}
+              </span>
+            </div>
 
-                  <button
-                    onClick={() => {
-                      setProfileOpen(false);
-                      navigate("/settings");
-                    }}
-                    className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-base font-medium text-[#4D4942] hover:text-[#111110] hover:bg-[#F0EBE3] transition-colors text-left group"
-                  >
-                    <svg className="w-4 h-4 text-[#9E9789] group-hover:text-[#111110] transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                      <circle cx="12" cy="12" r="3" />
-                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                    </svg>
-                    <span>Settings</span>
-                  </button>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                disabled={sharing}
+                onClick={() => setShowShareModal(true)}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-[#E4DFD5] bg-[#FFFFFF] hover:bg-[#F2EFE9] text-[11px] font-semibold text-[#111110] transition shadow-xs"
+                title="Share document"
+              >
+                <svg className="w-3 h-3 text-[#6B665E]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="18" cy="5" r="3" />
+                  <circle cx="6" cy="12" r="3" />
+                  <circle cx="18" cy="19" r="3" />
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                </svg>
+                <span>Share</span>
+              </button>
 
-                  <button
-                    onClick={() => {
-                      setProfileOpen(false);
-                      alert("Help & support will be available soon.");
-                    }}
-                    className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-base font-medium text-[#4D4942] hover:text-[#111110] hover:bg-[#F0EBE3] transition-colors text-left group"
-                  >
-                    <svg className="w-4 h-4 text-[#9E9789] group-hover:text-[#111110] transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                      <circle cx="12" cy="12" r="10" />
-                      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                      <line x1="12" y1="17" x2="12.01" y2="17" />
-                    </svg>
-                    <span>Help & support</span>
-                  </button>
-                </div>
-
-                {/* Logout Option */}
-                <div className="mt-1.5 pt-1.5 border-t border-[#EAE6DF]">
-                  <button
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-base font-medium text-[#A63529] hover:bg-[#FAECEB] transition-colors text-left group"
-                  >
-                    <svg className="w-4 h-4 text-[#A63529] transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                      <polyline points="16 17 21 12 16 7" />
-                      <line x1="21" y1="12" x2="9" y2="12" />
-                    </svg>
-                    <span>Log out</span>
-                  </button>
-                </div>
+              <div className="relative">
+                <select
+                  defaultValue=""
+                  onChange={(e) => {
+                    exportDocument(e.target.value);
+                    e.target.value = "";
+                  }}
+                  className="px-2.5 py-1 rounded-lg border border-[#E4DFD5] bg-[#FFFFFF] hover:bg-[#F2EFE9] text-[11px] font-semibold text-[#111110] outline-none transition cursor-pointer appearance-none pr-5 shadow-xs"
+                >
+                  <option value="" disabled>
+                    Export
+                  </option>
+                  <option value="pdf">PDF Document (.pdf)</option>
+                  <option value="doc">Word Document (.doc)</option>
+                  <option value="html">HTML Webpage (.html)</option>
+                  <option value="markdown">Markdown (.md)</option>
+                  <option value="txt">Plain Text (.txt)</option>
+                  <option value="excel">Excel Sheet (.xlsx)</option>
+                </select>
+                <svg
+                  className="w-2.5 h-2.5 text-[#8C867A] absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none"
+                  viewBox="0 0 12 12"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M3 4.5L6 7.5L9 4.5" />
+                </svg>
               </div>
-            )}
+            </div>
           </div>
         </div>
+
+        {/* SHARED PROFILE DROPDOWN */}
+        {profileOpen && (
+          <div className="fixed sm:absolute left-2.5 right-2.5 sm:left-auto sm:right-8 top-24 sm:top-14 w-auto sm:w-72 max-w-[calc(100vw-1.25rem)] bg-[#FAF8F5] border border-[#E4DFD5] rounded-2xl shadow-2xl shadow-[#111110]/15 p-2 z-50 animate-in fade-in zoom-in-95 duration-100">
+            {/* User Overview */}
+            <div className="px-3.5 py-3 mb-1.5 rounded-xl bg-[#F3EFE8] border border-[#E9E4DB] flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-[#111110] flex items-center justify-center text-[#FAF8F5] text-base font-semibold shrink-0 shadow-xs">
+                {avatarLetter}
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <p className="text-base font-semibold text-[#111110] truncate leading-tight">
+                    {currentUser?.username || "User"}
+                  </p>
+                  <span className="px-1.5 py-0.2 rounded text-[10px] font-bold uppercase tracking-wider bg-[#E8E2D6] text-[#6B665E]">
+                    PRO
+                  </span>
+                </div>
+                <p className="text-xs text-[#847E72] truncate mt-0.5">
+                  {currentUser?.email || "No email connected"}
+                </p>
+              </div>
+            </div>
+
+            {/* Actions List */}
+            <div className="space-y-0.5">
+              <button
+                onClick={() => {
+                  setProfileOpen(false);
+                  navigate("/profile");
+                }}
+                className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-base font-medium text-[#4D4942] hover:text-[#111110] hover:bg-[#F0EBE3] transition-colors text-left group"
+              >
+                <svg className="w-4 h-4 text-[#9E9789] group-hover:text-[#111110] transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                <span>Profile</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setProfileOpen(false);
+                  navigate("/settings");
+                }}
+                className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-base font-medium text-[#4D4942] hover:text-[#111110] hover:bg-[#F0EBE3] transition-colors text-left group"
+              >
+                <svg className="w-4 h-4 text-[#9E9789] group-hover:text-[#111110] transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                </svg>
+                <span>Settings</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setProfileOpen(false);
+                  alert("Help & support will be available soon.");
+                }}
+                className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-base font-medium text-[#4D4942] hover:text-[#111110] hover:bg-[#F0EBE3] transition-colors text-left group"
+              >
+                <svg className="w-4 h-4 text-[#9E9789] group-hover:text-[#111110] transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+                <span>Help & support</span>
+              </button>
+            </div>
+
+            {/* Logout Option */}
+            <div className="mt-1.5 pt-1.5 border-t border-[#EAE6DF]">
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-base font-medium text-[#A63529] hover:bg-[#FAECEB] transition-colors text-left group"
+              >
+                <svg className="w-4 h-4 text-[#A63529] transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                <span>Log out</span>
+              </button>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Editor Body Area */}
-      <main className="px-4 sm:px-8 py-8">
-        <div className="max-w-[1520px] mx-auto flex flex-col lg:flex-row gap-8 items-start">
+      <main className="px-2 sm:px-8 py-4 sm:py-8">
+        <div className="max-w-[1520px] mx-auto flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
 
           {/* ================= Editor Canvas ================= */}
           <section className="flex-1 w-full min-w-0">
-  <div className="bg-[#FFFFFF] rounded-2xl border border-[#E8E3D8] shadow-sm min-h-[85vh] relative overflow-hidden">
+  <div className="bg-[#FFFFFF] rounded-2xl border border-[#E8E3D8] shadow-sm min-h-[75vh] sm:min-h-[85vh] relative overflow-hidden">
 
     {pdfExtracting ? (
-      <div className="min-h-[85vh] flex items-center justify-center">
+      <div className="min-h-[75vh] sm:min-h-[85vh] flex items-center justify-center p-4">
         <div className="text-center">
           <div className="w-7 h-7 border-2 border-[#111110] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
 
@@ -1049,10 +1161,10 @@ const [aiError, setAiError] = useState("");
         </div>
       </div>
     ) : (
-      <div className="p-6 sm:p-12">
+      <div className="p-3 sm:p-12 pb-28 sm:pb-16">
 
         {isPdfDocument && (
-          <div className="mb-6 flex items-center justify-between gap-4 px-4 py-3 rounded-xl bg-[#F3EFE8] border border-[#E4DFD5]">
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 px-4 py-3 rounded-xl bg-[#F3EFE8] border border-[#E4DFD5]">
 
             <div className="min-w-0">
               <div className="flex items-center gap-2">
@@ -1063,17 +1175,17 @@ const [aiError, setAiError] = useState("");
                 </p>
               </div>
 
-              <p className="text-[11px] text-[#8C867A] mt-1">
+              <p className="text-[11px] text-[#8C867A] mt-0.5">
                 This document is now editable in Dragen.
               </p>
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
               {fileUrl && (
                 <button
                   type="button"
                   onClick={() => setShowPdfComparison((prev) => !prev)}
-                  className="px-3 py-2 rounded-lg border border-[#E4DFD5] bg-[#FFFFFF] hover:bg-[#F2EFE9] text-[11px] font-semibold text-[#111110] transition flex items-center gap-1.5"
+                  className="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg border border-[#E4DFD5] bg-[#FFFFFF] hover:bg-[#F2EFE9] text-[11px] font-semibold text-[#111110] transition flex items-center justify-center gap-1.5 shadow-xs"
                 >
                   <span>{showPdfComparison ? "Hide Original" : "Compare with Original"}</span>
                 </button>
@@ -1084,7 +1196,7 @@ const [aiError, setAiError] = useState("");
                   href={fileUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-3 py-2 rounded-lg border border-[#E4DFD5] bg-[#FFFFFF] hover:bg-[#F2EFE9] text-[11px] font-semibold text-[#111110] transition"
+                  className="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg border border-[#E4DFD5] bg-[#FFFFFF] hover:bg-[#F2EFE9] text-[11px] font-semibold text-[#111110] transition text-center shadow-xs"
                 >
                   Open PDF ↗
                 </a>
@@ -1196,7 +1308,7 @@ const [aiError, setAiError] = useState("");
               )}
             </div>
 {/* ================= DRAGEN AI SIDEBAR ================= */}
-<div className="bg-[#FFFFFF] rounded-2xl border border-[#E8E3D8] shadow-xs overflow-hidden">
+<div id="dragen-ai-panel" className="bg-[#FFFFFF] rounded-2xl border border-[#E8E3D8] shadow-xs overflow-hidden scroll-mt-20">
 
   {/* AI Header with Tabs */}
   <div className="border-b border-[#EAE6DF] bg-[#FAF8F5]">
@@ -1434,7 +1546,7 @@ const [aiError, setAiError] = useState("");
         <label className="block text-xs font-semibold text-[#111110] mb-2">
           Transformation Style
         </label>
-        <div className="grid grid-cols-2 gap-1.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
           {[
             { id: "fix_grammar", label: "Fix Grammar & Typos" },
             { id: "improve", label: "Improve Clarity" },
@@ -1616,11 +1728,11 @@ const [aiError, setAiError] = useState("");
       {/* SHARE MODAL DIALOG */}
       {showShareModal && (
         <div
-          className="fixed inset-0 bg-[#111110]/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-100"
+          className="fixed inset-0 bg-[#111110]/40 backdrop-blur-xs flex items-center justify-center z-50 p-3 sm:p-4 animate-in fade-in duration-100"
           onClick={() => setShowShareModal(false)}
         >
           <div
-            className="bg-[#FAF8F5] border border-[#E4DFD5] rounded-2xl w-full max-w-md p-6 sm:p-7 shadow-2xl animate-in zoom-in-95 duration-150"
+            className="bg-[#FAF8F5] border border-[#E4DFD5] rounded-2xl w-full max-w-md p-5 sm:p-7 shadow-2xl animate-in zoom-in-95 duration-150 max-h-[90dvh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between pb-4 mb-5 border-b border-[#EAE6DF]">
@@ -1692,6 +1804,19 @@ const [aiError, setAiError] = useState("");
           </div>
         </div>
       )}
+      {/* Floating mobile quick jump to AI Assistant */}
+      <button
+        type="button"
+        onClick={() => {
+          const panel = document.getElementById("dragen-ai-panel");
+          panel?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }}
+        className="lg:hidden fixed bottom-5 right-5 z-30 bg-[#111110] text-[#FAF8F5] px-3.5 py-2.5 rounded-full shadow-2xl flex items-center gap-2 text-xs font-semibold border border-[#2D2A26] active:scale-95 transition-all"
+        aria-label="Open AI Assistant"
+      >
+        <span className="text-[#B58A3B]">✦</span>
+        <span>Dragen AI</span>
+      </button>
     </div>
   );
 }
